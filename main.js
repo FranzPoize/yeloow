@@ -49,7 +49,7 @@ function readBlockV5and6( array ) {
 	return block;
 }
 var fileResult = new XMLHttpRequest();
-fileResult.open('GET','hangar.rbe',true);
+fileResult.open('GET','dm1.rbe',true);
 fileResult.responseType = 'arraybuffer';
 
 var	cameraDf = 0,
