@@ -1,53 +1,5 @@
 'use strict';
 
-function readChar( array ) {
-	return array[array.readingIndex++];
-}
-
-function readWord( array ) {
-	return array[array.readingIndex++] | array[array.readingIndex++] << 8;
-}
-
-function readInt( array ) {
-	return array[array.readingIndex++] | array[array.readingIndex++] << 8 | array[array.readingIndex++] << 16 | array[array.readingIndex++] << 24;
-}
-
-function readLong( array ) {
-	return array[array.readingIndex++] | array[array.readingIndex++] << 8 | array[array.readingIndex++] << 16 | array[array.readingIndex++] << 24 |
-	array[array.readingIndex++] << 32 | array[array.readingIndex++] << 40 | array[array.readingIndex++] << 48 | array[array.readingIndex++] << 56;
-}
-
-function readTexture( array ) {
-	var strLength = readInt(array),
-		textName = '';
-	for (var i = 0; i < strLength; i++) {
-		textName += String.fromCharCode(readChar(array));
-	}
-
-	return textName;
-}
-
-function readBlockV4( array ) {
-	var block = {}
-	block.x = readInt(array);
-	block.y = readInt(array);
-	block.z = readInt(array);
-	block.info = readWord(array) | readChar(array) << 16;
-
-	return block;
-}
-
-
-
-function readBlockV5and6( array ) {
-	var block = {}
-	block.x = readInt(array);
-	block.y = readInt(array);
-	block.z = readInt(array);
-	block.info = readInt(array);
-
-	return block;
-}
 var fileResult = new XMLHttpRequest();
 fileResult.open('GET','dm1.rbe',true);
 fileResult.responseType = 'arraybuffer';
@@ -56,39 +8,23 @@ var	cameraDf = 0,
 	cameraDside = 0,
 	camera_rightRotation = 0,
 	camera_upRotation = 0;
+
 fileResult.onload = function (event) {
-	var bytes = new Uint8Array(fileResult.response),
-		textureMap = [],
-		blocks = [];
+	var bytes = new Uint8Array(fileResult.response);
 	bytes.readingIndex = 0;
 
-	var fileTag = String.fromCharCode(readChar(bytes)) +
-					String.fromCharCode(readChar(bytes)) +
-					String.fromCharCode(readChar(bytes)) +
-					String.fromCharCode(readChar(bytes));
-
-
-	var version = readInt(bytes),
-		padding = readInt(bytes),
-		textureCount = readInt(bytes) - 1,
-		idk = readChar(bytes);
-
-	for (var i = 0; i < textureCount; i++) {
-		textureMap[i] = readTexture(bytes);
-	}
-
-	var blockCount = readInt(bytes);
-
-	for (var i = 0; i < blockCount; i++) {
-		blocks.push(readBlockV4(bytes));
-	}
 
 	var TDContext = {
 		selected:[]
 	};
 	initTDContext(TDContext);
 
-	createBlocks(blocks, TDContext.scene);
+	var prevLook = new THREE.Vector3(0,0,0);
+
+	var map = new Map(bytes);
+	for (var i = 0; i< map.blocks.length; i++) {
+		TDContext.scene.add(map.blocks[i].cube);
+	}
 	var render = function () {
 		TDContext.playerLight.position.set( TDContext.camera.position.x, TDContext.camera.position.y, TDContext.camera.position.z );
 
@@ -101,28 +37,57 @@ fileResult.onload = function (event) {
 		selectPosition.y = Math.round(selectPosition.y);
 		selectPosition.z = Math.round(selectPosition.z);
 
-		if (!TDContext.hightlighted || TDContext.hightlighted.cube.position != selectPosition) {
+		if (!TDContext.hightlighted || !TDContext.hightlighted.cube.position.equals(selectPosition)) {
 			if (TDContext.hightlighted) {
-				TDContext.hightlighted.remove(TDContext.scene);
+				TDContext.scene.remove(TDContext.hightlighted.cube);
 			}
 			var material = new THREE.MeshBasicMaterial({color:0xffff00,opacity:0.1,transparent:true});
-			TDContext.hightlighted = new RebornBlock( selectPosition.x, selectPosition.y, selectPosition.z, material);
-			TDContext.hightlighted.addToScene(TDContext.scene);
+			TDContext.hightlighted = new RebornBlock( selectPosition.x, selectPosition.y, selectPosition.z, material,1);
+			TDContext.scene.add(TDContext.hightlighted.cube);
 		}
 
+		var upAxisQuaternion = new THREE.Quaternion().setFromAxisAngle(TDContext.camera.up.normalize(),camera_upRotation);
 		var right = new THREE.Vector3();
 		right.crossVectors(look,TDContext.camera.up);
+		var up = new THREE.Vector3();
+		up.crossVectors(right,look);
 
 		var rightAxisQuaternion = new THREE.Quaternion().setFromAxisAngle(right.normalize(),camera_rightRotation);
-		var upAxisQuaternion = new THREE.Quaternion().setFromAxisAngle(TDContext.camera.up.normalize(),camera_upRotation);
 		camera_rightRotation = 0;
 		camera_upRotation = 0;
 		look.applyQuaternion(rightAxisQuaternion).applyQuaternion(upAxisQuaternion);
-		TDContext.camera.lookAt(new THREE.Vector3().addVectors(TDContext.camera.position,look));
+		if (!look.equals(prevLook)) {
 
-		TDContext.camera.position.add(right.multiplyScalar(cameraDside));
-		TDContext.camera.position.add(look.multiplyScalar(cameraDf));
+			TDContext.camera.lookAt(new THREE.Vector3().addVectors(TDContext.camera.position,look));
+			prevLook = look;
+		}
 
+		if (cameraDf) {
+
+			TDContext.camera.position.add(look.multiplyScalar(cameraDf));
+		}
+		if (cameraDside) {
+
+			TDContext.camera.position.add(right.multiplyScalar(cameraDside));
+		}
+
+		for (var i = 0; i < map.blocks.length; i++) {
+			var vertices = map.blocks[i].cube.geometry.vertices;
+			for (var j = 0; j < vertices.length; j++) {
+				var cameraToVertices = new THREE.Vector3();
+				cameraToVertices.subVectors(vertices[j],TDContext.camera.position).normalize();
+
+				var ZComp = Math.acos(cameraToVertices.dot(look));
+				var YComp = Math.acos(cameraToVertices.dot(up));
+				var XComp = Math.acos(cameraToVertices.dot(right));
+
+				var node = insertAndRebalance(RBNode.rootNode,YComp,map.blocks[i],undefined);
+				if (!RBNode.rootNode)
+					RBNode.rootNode = node;
+			}
+		}
+
+		RBNode.rootNode = undefined;
 
 		requestAnimationFrame( render );
 
@@ -170,34 +135,6 @@ function initTDContext( context ) {
 var mouseDown = false;
 var prevX = 0,prevY = 0,
 	sensitivity = 600;
-
-function createBlocks( blocks, scene ) {
-	var texture = THREE.ImageUtils.loadTexture('panel_02.png');
-	for (var i = 0; i < blocks.length; i++) {
-		var material = new THREE.MeshLambertMaterial( { color: 0xffffff, map:texture} );
-		var block = new RebornBlock(blocks[i].x,blocks[i].y,blocks[i].z,material);
-		block.addToScene(scene);
-	}
-}
-
-var RebornBlock = function( x, y, z, material ) {
-	var geometry = new THREE.BoxGeometry(1,1,1)
-	var cube = new THREE.Mesh( geometry, material );
-	cube.position.x = x;
-	cube.position.y = y;
-	cube.position.z = z;
-	this.cube = cube;
-
-	return this
-}
-
-RebornBlock.prototype.addToScene = function ( scene ) {
-	scene.add(this.cube);
-}
-
-RebornBlock.prototype.remove = function ( scene ) {
-	scene.remove(this.cube);
-}
 
 function createSkyLight( scene ) {
 
@@ -253,17 +190,29 @@ function onKeyPress(e) {
 	if (e.keyCode == 32) {
 		var hightlighted = this.hightlighted.cube.position;
 		var material = new THREE.MeshBasicMaterial({color:0xff0000,wireframe:true});
-		var selectedBlock = new RebornBlock(hightlighted.x,hightlighted.y,hightlighted.z,material);
-		selectedBlock.addToScene(this.scene);
+		var selectedBlock = new RebornBlock(hightlighted.x,hightlighted.y,hightlighted.z,material,1);
+		this.scene.add(selectedBlock.cube);
 		this.selected.push(selectedBlock);
 	}
 	if (e.keyCode == 50) {
 		var texture = THREE.ImageUtils.loadTexture('panel_02.png');
 		var material = new THREE.MeshLambertMaterial( { color: 0xffffff, map:texture} );
 		for (var i = 0; i < this.selected.length; i++) {
-			var block = new RebornBlock(this.selected[i].cube.position.x,this.selected[i].cube.position.y,this.selected[i].cube.position.z,material);
-			block.addToScene(this.scene);
+			if (!isLocationOccupied(this.selected[i].cube.position)) {
+				var block = new RebornBlock(this.selected[i].cube.position.x,this.selected[i].cube.position.y,this.selected[i].cube.position.z,material,1,true);
+				this.scene.add(block.cube);
+			}
 		}
+	}
+	if (e.keyCode == 49) {
+		for (var i = 0; i < this.selected.length; i++) {
+			if (isLocationOccupied(this.selected[i].cube.position)) {
+				var block = volumeMap[this.selected[i].cube.position.x + ',' + this.selected[i].cube.position.y + ',' +this.selected[i].cube.position.z ];
+				this.scene.remove(block.cube);
+				volumeMap[this.selected[i].cube.position.x + ',' + this.selected[i].cube.position.y + ',' +this.selected[i].cube.position.z ] = undefined;
+			}
+		}
+
 	}
 	cameraDf = e.keyCode == 90 ? cameraDf + 0.5 : cameraDf;
 	cameraDf = e.keyCode == 83 ? cameraDf - 0.5 : cameraDf;
