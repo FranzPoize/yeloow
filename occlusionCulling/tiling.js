@@ -2,7 +2,7 @@
 
 (function(window) {
 	var material = new THREE.MeshBasicMaterial({color:0x00ffff,wireframe:true});
-	var tileSize = 4;
+	var tileSize = 6;
 
 	function findContainedBlock(x,y,z,volumeMap) {
 		var blocks = [];
@@ -103,10 +103,30 @@
 		this.visible = true;
 	}
 
+	function expandCell(source,cellMap,volumeMap,x,y,z,minX,minY,minZ,material) {
+		var block = new BA.RebornBlock(x,y,z,
+			material,1,false);
+		block.cube.visible = false;
+		source.cells.push(block);
+		cellMap.insert(x,y,z,true);
+
+		if (x - 1 > minX && !volumeMap.get(x-1,y,z) && !cellMap.get(x-1,y,z))
+			expandCell(source,cellMap,volumeMap,x-1,y,z,minX,minY,minZ,material);
+		if (y - 1 > minY && !volumeMap.get(x,y-1,z) && !cellMap.get(x,y-1,z))
+			expandCell(source,cellMap,volumeMap,x,y-1,z,minX,minY,minZ,material);
+		if (z - 1 > minZ && !volumeMap.get(x,y,z-1) && !cellMap.get(x,y,z-1))
+			expandCell(source,cellMap,volumeMap,x,y,z-1,minX,minY,minZ,material);
+		if (x + 1 < minX + tileSize && !volumeMap.get(x+1,y,z) && !cellMap.get(x+1,y,z))
+			expandCell(source,cellMap,volumeMap,x+1,y,z,minX,minY,minZ,material);
+		if (y + 1 < minY + tileSize && !volumeMap.get(x,y+1,z) && !cellMap.get(x,y+1,z))
+			expandCell(source,cellMap,volumeMap,x,y+1,z,minX,minY,minZ,material);
+		if (z + 1 < minZ + tileSize && !volumeMap.get(x,y,z+1) && !cellMap.get(x,y,z+1))
+			expandCell(source,cellMap,volumeMap,x,y,z+1,minX,minY,minZ,material);
+	}
+
 	window.OcclusionTile.prototype.constructCells = function (volumeMap, minX, minY, minZ) {
 		this.cells = [];
-		var color = new THREE.Color(Math.random(),Math.random(),Math.random());
-		var cellMaterial = new THREE.MeshBasicMaterial({color:color,opacity:0.1,transparent:true});
+		var cellMap = new BA.VolumeMap();
 		for (var xIndex = this.x * tileSize + minX + 0.5;
 			xIndex <= this.x * tileSize + minX + tileSize - 0.5;
 			xIndex++) {
@@ -116,11 +136,18 @@
 				for (var zIndex = this.z * tileSize + minZ + 0.5;
 					zIndex <= this.z * tileSize + minZ + tileSize - 0.5;
 					zIndex++) {
-					if(!volumeMap.get(xIndex, yIndex, zIndes)) {
-						var block = new RebornBlock(xIndex,yIndex,zIndex,
-							cellMaterial,1,false);
-						block.cube.visible = false;
-						this.cells.push(block);
+					if(!volumeMap.get(xIndex, yIndex, zIndex) && !cellMap.get(xIndex, yIndex, zIndex)) {
+						var color = new THREE.Color(Math.random(),Math.random(),Math.random()),
+							cellMaterial = new THREE.MeshBasicMaterial(
+								{
+									color:color,
+									opacity:0.1,
+									transparent:true
+								});
+						expandCell(this,cellMap,volumeMap,xIndex,yIndex,zIndex,
+							this.x * tileSize + minX + 0.5,
+							this.y * tileSize + minY + 0.5,
+							this.z * tileSize + minZ,cellMaterial);
 					}
 				}
 			}
