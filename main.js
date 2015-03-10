@@ -21,14 +21,14 @@ fileResult.onload = function (event) {
 
 	var prevLook = new THREE.Vector3(0,0,0);
 
-	var map = new Map(bytes);
+	var map = new BA.Map(bytes);
 	for (var i = 0; i< map.blocks.length; i++) {
 		TDContext.scene.add(map.blocks[i].cube);
 	}
 
 	var occlusion = new OcclusionTileMap(map.blocks,map.volumeMap);
 	for (var i = 0; i < occlusion.tiles.length; i++) {
-		TDContext.scene.add(occlusion.tiles[i].visualBlock.cube);
+		// TDContext.scene.add(occlusion.tiles[i].visualBlock.cube);
 		for(var j = 0; j< occlusion.tiles[i].cells.length; j++) {
 			TDContext.scene.add(occlusion.tiles[i].cells[j].cube);
 		}
@@ -51,7 +51,7 @@ fileResult.onload = function (event) {
 				TDContext.scene.remove(TDContext.hightlighted.cube);
 			}
 			var material = new THREE.MeshBasicMaterial({color:0xffff00,opacity:0.1,transparent:true});
-			TDContext.hightlighted = new RebornBlock( selectPosition.x, selectPosition.y, selectPosition.z, material,1);
+			TDContext.hightlighted = new BA.RebornBlock( selectPosition.x, selectPosition.y, selectPosition.z, material,1);
 			TDContext.scene.add(TDContext.hightlighted.cube);
 		}
 
@@ -202,7 +202,7 @@ function onKeyPress(e) {
 	if (e.keyCode == 32) {
 		var hightlighted = this.hightlighted.cube.position;
 		var material = new THREE.MeshBasicMaterial({color:0xff0000,wireframe:true});
-		var selectedBlock = new RebornBlock(hightlighted.x,hightlighted.y,hightlighted.z,material,1);
+		var selectedBlock = new BA.RebornBlock(hightlighted.x,hightlighted.y,hightlighted.z,material,1);
 		this.scene.add(selectedBlock.cube);
 		this.selected.push(selectedBlock);
 	}
@@ -211,7 +211,7 @@ function onKeyPress(e) {
 		var material = new THREE.MeshLambertMaterial( { color: 0xffffff, map:texture} );
 		for (var i = 0; i < this.selected.length; i++) {
 			if (!isLocationOccupied(this.selected[i].cube.position)) {
-				var block = new RebornBlock(this.selected[i].cube.position.x,this.selected[i].cube.position.y,this.selected[i].cube.position.z,material,1,true);
+				var block = new BA.RebornBlock(this.selected[i].cube.position.x,this.selected[i].cube.position.y,this.selected[i].cube.position.z,material,1,true);
 				this.scene.add(block.cube);
 			}
 		}

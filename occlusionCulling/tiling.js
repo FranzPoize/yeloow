@@ -10,7 +10,7 @@
 		for (var xIndex = x - (tileSize/2 - 0.5); xIndex <= x + (tileSize / 2 - 0.5); xIndex++) {
 			for (var yIndex = y - (tileSize / 2 - 0.5); yIndex <= y + (tileSize / 2 - 0.5); yIndex++) {
 				for (var zIndex = z - (tileSize / 2 - 0.5); zIndex <= z + (tileSize / 2 - 0.5); zIndex++) {
-					var block = volumeMap[xIndex + ',' + yIndex + ',' + zIndex];
+					var block = volumeMap.get(xIndex, yIndex, zIndex);
 					if (block)
 						blocks.push(block);
 				}
@@ -27,7 +27,7 @@
 		this.minX = Infinity;
 		this.minY = Infinity;
 		this.minZ = Infinity;
-		this.tileVolumeMap = {};
+		this.tileVolumeMap = new BA.VolumeMap();
 
 		for (var i = 0; i < blocks.length; i++) {
 			this.maxX = Math.max(this.maxX, blocks[i].cube.position.x + 0.5);
@@ -55,7 +55,7 @@
 						blocksContained = findContainedBlock(x,y,z,volumeMap),
 						tile = new OcclusionTile(blocksContained, xIndex, yIndex, zIndex, this.minX, this.minY, this.minZ,volumeMap);
 					this.tiles.push(tile);
-					this.tileVolumeMap[tile.x + ',' + tile.y + ',' + tile.z] = tile;
+					this.tileVolumeMap.insert(tile.x, tile.y, tile.z, tile);
 
 				}
 			}
@@ -63,7 +63,7 @@
 	}
 
 	window.OcclusionTileMap.prototype.findContainingTile = function(x, y, z) {
-		return this.tileVolumeMap[Math.floor((x - this.minX ) / tileSize )+','+Math.floor((y - this.minY ) / tileSize )+','+ Math.floor((z - this.minZ ) / tileSize)];
+		return this.tileVolumeMap.get(Math.floor((x - this.minX ) / tileSize ), Math.floor((y - this.minY ) / tileSize ), Math.floor((z - this.minZ ) / tileSize));
 	}
 
 	window.OcclusionTileMap.prototype.occludedEverythingButMyTile = function(x, y, z) {
@@ -96,7 +96,7 @@
 
 		this.constructCells(volumeMap,minX,minY,minZ);
 
-		this.visualBlock = new RebornBlock(x * tileSize + minX + tileSize / 2,
+		this.visualBlock = new BA.RebornBlock(x * tileSize + minX + tileSize / 2,
 			y * tileSize + minY + tileSize / 2,
 			z * tileSize + minZ + tileSize / 2,
 			material , tileSize, false);
@@ -116,7 +116,7 @@
 				for (var zIndex = this.z * tileSize + minZ + 0.5;
 					zIndex <= this.z * tileSize + minZ + tileSize - 0.5;
 					zIndex++) {
-					if(!volumeMap[xIndex + ',' + yIndex + ',' + zIndex]) {
+					if(!volumeMap.get(xIndex, yIndex, zIndes)) {
 						var block = new RebornBlock(xIndex,yIndex,zIndex,
 							cellMaterial,1,false);
 						block.cube.visible = false;

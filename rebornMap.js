@@ -30,7 +30,7 @@
 		return textName;
 	}
 
-	window.Map = function(bytes) {
+	window.BA.Map = function(bytes) {
 		var fileTag = String.fromCharCode(readChar(bytes)) +
 						String.fromCharCode(readChar(bytes)) +
 						String.fromCharCode(readChar(bytes)) +
@@ -51,20 +51,24 @@
 
 		var blockCount = readInt(bytes);
 
-		this.volumeMap = {};
+		this.volumeMap = new BA.VolumeMap();
 
 		this.blocks = [];
 		for (var i = 0; i < blockCount; i++) {
 			var block = readBlockV4(bytes);
-			var rebornBlck = new RebornBlock(block.x, block.y, block.z,this.textures.panel_02,1);
+			var rebornBlck = new BA.RebornBlock(block.x, block.y, block.z,this.textures.panel_02,1);
 			this.blocks.push(rebornBlck);
-			this.addToVolumeMap(rebornBlck);
+			this.volumeMap.insert(block.x,block.y,block.z,rebornBlck);
 		}
 
 		return this;
 	}
 
-	window.RebornBlock = function( x, y, z, material, size, isEntity) {
+	window.BA.Map.prototype.isLocationOccupied = function ( position ) {
+		return !!this.volumeMap.get(position.x,position.y,position.z);
+	}
+
+	window.BA.RebornBlock = function( x, y, z, material, size, isEntity) {
 		var geometry = new THREE.BoxGeometry(size,size,size)
 		var cube = new THREE.Mesh( geometry, material );
 		cube.position.x = x;
@@ -74,11 +78,5 @@
 
 		return this
 	}
-	window.Map.prototype.addToVolumeMap = function ( block ) {
-		this.volumeMap[block.cube.position.x + ',' + block.cube.position.y + ',' + block.cube.position.z] = block;
-	}
 
-	window.Map.prototype.isLocationOccupied = function ( position ) {
-		return !!this.volumeMap[position.x + ',' + position.y + ',' + position.z];
-	}
 })(window);
