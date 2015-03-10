@@ -25,6 +25,12 @@ fileResult.onload = function (event) {
 	for (var i = 0; i< map.blocks.length; i++) {
 		TDContext.scene.add(map.blocks[i].cube);
 	}
+
+	var occlusion = new OcclusionTileMap(map.blocks,map.volumeMap);
+	for (var i = 0; i < occlusion.tiles.length; i++) {
+		TDContext.scene.add(occlusion.tiles[i].visualBlock.cube);
+	}
+
 	var render = function () {
 		TDContext.playerLight.position.set( TDContext.camera.position.x, TDContext.camera.position.y, TDContext.camera.position.z );
 
@@ -90,6 +96,8 @@ fileResult.onload = function (event) {
 		RBNode.rootNode = undefined;
 
 		requestAnimationFrame( render );
+
+		occlusion.occludedEverythingButMyTile(selectPosition.x,selectPosition.y,selectPosition.z);
 
 		TDContext.renderer.render(TDContext.scene, TDContext.camera);
 	};
