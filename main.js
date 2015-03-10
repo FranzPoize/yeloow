@@ -29,6 +29,9 @@ fileResult.onload = function (event) {
 	var occlusion = new OcclusionTileMap(map.blocks,map.volumeMap);
 	for (var i = 0; i < occlusion.tiles.length; i++) {
 		TDContext.scene.add(occlusion.tiles[i].visualBlock.cube);
+		for(var j = 0; j< occlusion.tiles[i].cells.length; j++) {
+			TDContext.scene.add(occlusion.tiles[i].cells[j].cube);
+		}
 	}
 
 	var render = function () {
@@ -106,6 +109,7 @@ fileResult.onload = function (event) {
 
 	render();
 }
+
 function initTDContext( context ) {
 
 	context.scene = new THREE.Scene();

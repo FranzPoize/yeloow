@@ -2,13 +2,14 @@
 
 (function(window) {
 	var material = new THREE.MeshBasicMaterial({color:0x00ffff,wireframe:true});
+	var tileSize = 4;
 
 	function findContainedBlock(x,y,z,volumeMap) {
 		var blocks = [];
 
-		for (var xIndex = x - 1.5; xIndex <= x + 1.5; xIndex++) {
-			for (var yIndex = y - 1.5; yIndex <= y + 1.5; yIndex++) {
-				for (var zIndex = z - 1.5; zIndex <= z + 1.5; zIndex++) {
+		for (var xIndex = x - (tileSize/2 - 0.5); xIndex <= x + (tileSize / 2 - 0.5); xIndex++) {
+			for (var yIndex = y - (tileSize / 2 - 0.5); yIndex <= y + (tileSize / 2 - 0.5); yIndex++) {
+				for (var zIndex = z - (tileSize / 2 - 0.5); zIndex <= z + (tileSize / 2 - 0.5); zIndex++) {
 					var block = volumeMap[xIndex + ',' + yIndex + ',' + zIndex];
 					if (block)
 						blocks.push(block);
@@ -40,22 +41,21 @@
 		var ySize = ( this.maxY - this.minY ),
 			xSize = ( this.maxX - this.minX ),
 			zSize = ( this.maxZ - this.minZ ),
-			xTileSize = Math.floor((xSize )/ 4) + 1,
-			yTileSize = Math.floor((ySize )/ 4) + 1,
-			zTileSize = Math.floor((zSize )/ 4) + 1;
+			xTileSize = Math.floor((xSize )/ tileSize) + 2,
+			yTileSize = Math.floor((ySize )/ tileSize) + 2,
+			zTileSize = Math.floor((zSize )/ tileSize) + 2;
 
 		this.tiles = [];
-		this.volumeMap = {};
 		for (var xIndex = 0; xIndex < xTileSize; xIndex++) {
 			for (var yIndex = 0; yIndex < yTileSize; yIndex++) {
 				for (var zIndex = 0; zIndex < zTileSize; zIndex++) {
-					var x = this.minX + xIndex * 4 + 2,
-						y = this.minY + yIndex * 4 + 2,
-						z = this.minZ + zIndex * 4 + 2,
+					var x = this.minX + xIndex * tileSize + 2,
+						y = this.minY + yIndex * tileSize + 2,
+						z = this.minZ + zIndex * tileSize + 2,
 						blocksContained = findContainedBlock(x,y,z,volumeMap),
-						tile = new OcclusionTile(blocksContained, xIndex, yIndex, zIndex, this.minX, this.minY, this.minZ);
+						tile = new OcclusionTile(blocksContained, xIndex, yIndex, zIndex, this.minX, this.minY, this.minZ,volumeMap);
 					this.tiles.push(tile);
-					this.volumeMap[tile.x + ',' + tile.y + ',' + tile.z] = tile;
+					this.tileVolumeMap[tile.x + ',' + tile.y + ',' + tile.z] = tile;
 
 				}
 			}
@@ -63,7 +63,7 @@
 	}
 
 	window.OcclusionTileMap.prototype.findContainingTile = function(x, y, z) {
-		return this.volumeMap[Math.floor((x - this.minX ) / 4 )+','+Math.floor((y - this.minY ) / 4 )+','+ Math.floor((z - this.minZ ) / 4)];
+		return this.tileVolumeMap[Math.floor((x - this.minX ) / tileSize )+','+Math.floor((y - this.minY ) / tileSize )+','+ Math.floor((z - this.minZ ) / tileSize)];
 	}
 
 	window.OcclusionTileMap.prototype.occludedEverythingButMyTile = function(x, y, z) {
@@ -73,13 +73,13 @@
 				var aTile = this.tiles[i];
 
 				if (aTile.visible && (aTile.x != myTile.x || aTile.y != myTile.y || aTile.z != myTile.z )) {
-					for (var j = 0; j < aTile.blocksContained.length; j++) {
-						aTile.blocksContained[j].cube.visible = false;
+					for (var j = 0; j < aTile.cells.length; j++) {
+						aTile.cells[j].cube.visible = false;
 					}
 					aTile.visible = false;
 				} else if (!aTile.visible && (aTile.x == myTile.x && aTile.y == myTile.y && aTile.z == myTile.z)) {
-					for (var j = 0; j < aTile.blocksContained.length; j++) {
-						aTile.blocksContained[j].cube.visible = true;
+					for (var j = 0; j < aTile.cells.length; j++) {
+						aTile.cells[j].cube.visible = true;
 					}
 					aTile.visible = true;
 				}
@@ -87,12 +87,43 @@
 		}
 	}
 
-	window.OcclusionTile = function (blocks, x, y, z, minX, minY, minZ) {
+	window.OcclusionTile = function (blocks, x, y, z, minX, minY, minZ,volumeMap) {
 		this.blocksContained = blocks;
+
 		this.x = x;
 		this.y = y;
 		this.z = z;
-		this.visualBlock = new RebornBlock(x * 4 + minX + 2, y * 4 + minY + 2, z * 4 + minZ + 2, material , 4, false);
+
+		this.constructCells(volumeMap,minX,minY,minZ);
+
+		this.visualBlock = new RebornBlock(x * tileSize + minX + tileSize / 2,
+			y * tileSize + minY + tileSize / 2,
+			z * tileSize + minZ + tileSize / 2,
+			material , tileSize, false);
 		this.visible = true;
+	}
+
+	window.OcclusionTile.prototype.constructCells = function (volumeMap, minX, minY, minZ) {
+		this.cells = [];
+		var color = new THREE.Color(Math.random(),Math.random(),Math.random());
+		var cellMaterial = new THREE.MeshBasicMaterial({color:color,opacity:0.1,transparent:true});
+		for (var xIndex = this.x * tileSize + minX + 0.5;
+			xIndex <= this.x * tileSize + minX + tileSize - 0.5;
+			xIndex++) {
+			for (var yIndex = this.y * tileSize + minY + 0.5;
+				yIndex <= this.y * tileSize + minY + tileSize - 0.5;
+				yIndex++) {
+				for (var zIndex = this.z * tileSize + minZ + 0.5;
+					zIndex <= this.z * tileSize + minZ + tileSize - 0.5;
+					zIndex++) {
+					if(!volumeMap[xIndex + ',' + yIndex + ',' + zIndex]) {
+						var block = new RebornBlock(xIndex,yIndex,zIndex,
+							cellMaterial,1,false);
+						block.cube.visible = false;
+						this.cells.push(block);
+					}
+				}
+			}
+		}
 	}
 })(window)
