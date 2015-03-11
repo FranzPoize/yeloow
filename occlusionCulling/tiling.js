@@ -2,7 +2,7 @@
 
 (function(window) {
 	var material = new THREE.MeshBasicMaterial({color:0x00ffff,wireframe:true});
-	var tileSize = 6;
+	var tileSize = 4;
 
 	function findContainedBlock(x,y,z,volumeMap) {
 		var blocks = [];
@@ -68,20 +68,32 @@
 
 	window.OcclusionTileMap.prototype.occludedEverythingButMyTile = function(x, y, z) {
 		var myTile = this.findContainingTile(x, y, z);
-		if(myTile) {
+		if (myTile) {
 			for (var i = 0; i < this.tiles.length; i++) {
 				var aTile = this.tiles[i];
 
-				if (aTile.visible && (aTile.x != myTile.x || aTile.y != myTile.y || aTile.z != myTile.z )) {
+				if (aTile.visible &&
+					(aTile.x != myTile.x ||
+					aTile.y != myTile.y ||
+					aTile.z != myTile.z )) {
+
 					for (var j = 0; j < aTile.cells.length; j++) {
 						aTile.cells[j].cube.visible = false;
 					}
+
 					aTile.visible = false;
-				} else if (!aTile.visible && (aTile.x == myTile.x && aTile.y == myTile.y && aTile.z == myTile.z)) {
+
+				} else if (!aTile.visible &&
+					(aTile.x == myTile.x &&
+					aTile.y == myTile.y &&
+					aTile.z == myTile.z)) {
+
 					for (var j = 0; j < aTile.cells.length; j++) {
 						aTile.cells[j].cube.visible = true;
 					}
+
 					aTile.visible = true;
+
 				}
 			}
 		}
@@ -95,6 +107,12 @@
 		this.z = z;
 
 		this.constructCells(volumeMap,minX,minY,minZ);
+		for(var i = 0; i< this.cells.length;i++) {
+			this.cells[i].voxels = findBoundaryVoxel(this.cells[i].volumeMap,
+				x * tileSize + minX + 0.5,
+				y * tileSize + minY + 0.5,
+				z * tileSize + minZ + 0.5);
+		}
 
 		this.visualBlock = new BA.RebornBlock(x * tileSize + minX + tileSize / 2,
 			y * tileSize + minY + tileSize / 2,
@@ -103,54 +121,128 @@
 		this.visible = true;
 	}
 
-	function expandCell(source,cellMap,volumeMap,x,y,z,minX,minY,minZ,material) {
-		var block = new BA.RebornBlock(x,y,z,
-			material,1,false);
-		block.cube.visible = false;
-		source.cells.push(block);
-		cellMap.insert(x,y,z,true);
+	function expandCell(newCell,volumeMap,x,y,z,minX,minY,minZ,material) {
+		
+		newCell.volumeMap.insert(x,y,z,true);
 
-		if (x - 1 > minX && !volumeMap.get(x-1,y,z) && !cellMap.get(x-1,y,z))
-			expandCell(source,cellMap,volumeMap,x-1,y,z,minX,minY,minZ,material);
-		if (y - 1 > minY && !volumeMap.get(x,y-1,z) && !cellMap.get(x,y-1,z))
-			expandCell(source,cellMap,volumeMap,x,y-1,z,minX,minY,minZ,material);
-		if (z - 1 > minZ && !volumeMap.get(x,y,z-1) && !cellMap.get(x,y,z-1))
-			expandCell(source,cellMap,volumeMap,x,y,z-1,minX,minY,minZ,material);
-		if (x + 1 < minX + tileSize && !volumeMap.get(x+1,y,z) && !cellMap.get(x+1,y,z))
-			expandCell(source,cellMap,volumeMap,x+1,y,z,minX,minY,minZ,material);
-		if (y + 1 < minY + tileSize && !volumeMap.get(x,y+1,z) && !cellMap.get(x,y+1,z))
-			expandCell(source,cellMap,volumeMap,x,y+1,z,minX,minY,minZ,material);
-		if (z + 1 < minZ + tileSize && !volumeMap.get(x,y,z+1) && !cellMap.get(x,y,z+1))
-			expandCell(source,cellMap,volumeMap,x,y,z+1,minX,minY,minZ,material);
+		if (x - 1 >= minX && !volumeMap.get(x-1,y,z) && !newCell.volumeMap.get(x-1,y,z))
+			expandCell(newCell,volumeMap,x-1,y,z,minX,minY,minZ,material);
+
+		if (x + 1 < minX + tileSize && !volumeMap.get(x+1,y,z) && !newCell.volumeMap.get(x+1,y,z))
+			expandCell(newCell,volumeMap,x+1,y,z,minX,minY,minZ,material);
+		
+		if (y - 1 >= minY && !volumeMap.get(x,y-1,z) && !newCell.volumeMap.get(x,y-1,z))
+			expandCell(newCell,volumeMap,x,y-1,z,minX,minY,minZ,material);
+		
+		if (y + 1 < minY + tileSize && !volumeMap.get(x,y+1,z) && !newCell.volumeMap.get(x,y+1,z))
+			expandCell(newCell,volumeMap,x,y+1,z,minX,minY,minZ,material);
+		
+		if (z - 1 >= minZ && !volumeMap.get(x,y,z-1) && !newCell.volumeMap.get(x,y,z-1))
+			expandCell(newCell,volumeMap,x,y,z-1,minX,minY,minZ,material);
+		
+		if (z + 1 < minZ + tileSize && !volumeMap.get(x,y,z+1) && !newCell.volumeMap.get(x,y,z+1))
+			expandCell(newCell,volumeMap,x,y,z+1,minX,minY,minZ,material);
 	}
 
 	window.OcclusionTile.prototype.constructCells = function (volumeMap, minX, minY, minZ) {
 		this.cells = [];
-		var cellMap = new BA.VolumeMap();
+
 		for (var xIndex = this.x * tileSize + minX + 0.5;
 			xIndex <= this.x * tileSize + minX + tileSize - 0.5;
 			xIndex++) {
+
 			for (var yIndex = this.y * tileSize + minY + 0.5;
 				yIndex <= this.y * tileSize + minY + tileSize - 0.5;
 				yIndex++) {
+
 				for (var zIndex = this.z * tileSize + minZ + 0.5;
 					zIndex <= this.z * tileSize + minZ + tileSize - 0.5;
 					zIndex++) {
-					if(!volumeMap.get(xIndex, yIndex, zIndex) && !cellMap.get(xIndex, yIndex, zIndex)) {
-						var color = new THREE.Color(Math.random(),Math.random(),Math.random()),
-							cellMaterial = new THREE.MeshBasicMaterial(
-								{
-									color:color,
-									opacity:0.1,
-									transparent:true
-								});
-						expandCell(this,cellMap,volumeMap,xIndex,yIndex,zIndex,
-							this.x * tileSize + minX + 0.5,
-							this.y * tileSize + minY + 0.5,
-							this.z * tileSize + minZ,cellMaterial);
+					var inCellMap = false;
+					for(var i = 0; i < this.cells.length; i++) {
+						inCellMap = !!this.cells[i].volumeMap.get(xIndex, yIndex, zIndex);
+					}
+
+					if (!volumeMap.get(xIndex, yIndex, zIndex) &&
+						!inCellMap) {
+
+						var newCell = new OcclusionCell();
+						this.cells.push(newCell);
+						expandCell(newCell,volumeMap,xIndex,yIndex,zIndex,
+							this.x * tileSize + minX - 0.5,
+							this.y * tileSize + minY - 0.5,
+							this.z * tileSize + minZ - 0.5);
 					}
 				}
 			}
 		}
+	}
+
+	window.OcclusionCell = function () {
+		this.portals = [];
+		this.volumeMap = new BA.VolumeMap();
+	}
+
+	function findBoundaryVoxel( volumeMap, minX, minY, minZ ) {
+		var boundaryVoxel = {
+			minXVoxel: [],
+			maxXVoxel: [],
+			minYVoxel: [],
+			maxYVoxel: [],
+			minZVoxel: [],
+			maxZVoxel: [],
+		}
+
+		var colors = [
+			new THREE.MeshBasicMaterial({color:'#ff0000',opacity:0.1,transparent:true}),
+			new THREE.MeshBasicMaterial({color:'#00ff00',opacity:0.1,transparent:true}),
+			new THREE.MeshBasicMaterial({color:'#0000ff',opacity:0.1,transparent:true}),
+			new THREE.MeshBasicMaterial({color:'#ffff00',opacity:0.1,transparent:true}),
+			new THREE.MeshBasicMaterial({color:'#ff00ff',opacity:0.1,transparent:true}),
+			new THREE.MeshBasicMaterial({color:'#00ffff',opacity:0.1,transparent:true})
+			];
+		for (var coord in volumeMap.map) {
+			var splitCoord = coord.split(','),
+				x = splitCoord[0],
+				y = splitCoord[1],
+				z = splitCoord[2];
+
+				if (x == minX) {
+					boundaryVoxel.minXVoxel.push(
+						new BA.RebornBlock(x,y,z,colors[0],1,false)
+						);
+				}
+
+				if (x == minX + tileSize) {
+					boundaryVoxel.maxXVoxel.push(
+						new BA.RebornBlock(x,y,z,colors[1],1,false)
+						);
+				}
+
+				if (y == minY) {
+					boundaryVoxel.minYVoxel.push(
+						new BA.RebornBlock(x,y,z,colors[2],1,false)
+						);
+				}
+
+				if (y == minY + tileSize) {
+					boundaryVoxel.maxYVoxel.push(
+						new BA.RebornBlock(x,y,z,colors[3],1,false)
+						);
+				}
+
+				if (z == minZ) {
+					boundaryVoxel.minZVoxel.push(
+						new BA.RebornBlock(x,y,z,colors[4],1,false)
+						);
+				}
+
+				if (z == minZ + tileSize) {
+					boundaryVoxel.maxZVoxel.push(
+						new BA.RebornBlock(x,y,z,colors[5],1,false)
+						);
+				}
+		}
+		return boundaryVoxel
 	}
 })(window)
