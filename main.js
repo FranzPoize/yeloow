@@ -98,27 +98,9 @@ fileResult.onload = function (event) {
 			TDContext.camera.position.add(right.multiplyScalar(cameraDside));
 		}
 
-		for (var i = 0; i < map.blocks.length; i++) {
-			var vertices = map.blocks[i].cube.geometry.vertices;
-			for (var j = 0; j < vertices.length; j++) {
-				var cameraToVertices = new THREE.Vector3();
-				cameraToVertices.subVectors(vertices[j],TDContext.camera.position).normalize();
-
-				var ZComp = Math.acos(cameraToVertices.dot(look));
-				var YComp = Math.acos(cameraToVertices.dot(up));
-				var XComp = Math.acos(cameraToVertices.dot(right));
-
-				var node = insertAndRebalance(RBNode.rootNode,YComp,map.blocks[i],undefined);
-				if (!RBNode.rootNode)
-					RBNode.rootNode = node;
-			}
-		}
-
-		RBNode.rootNode = undefined;
-
 		requestAnimationFrame( render );
 
-		// occlusion.occludedEverythingButMyTile(selectPosition.x,selectPosition.y,selectPosition.z);
+		occlusion.occludedEverythingButMyTile(selectPosition.x,selectPosition.y,selectPosition.z);
 
 		TDContext.renderer.render(TDContext.scene, TDContext.camera);
 	};

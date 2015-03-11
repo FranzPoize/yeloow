@@ -2,7 +2,7 @@
 
 (function(window) {
 	var material = new THREE.MeshBasicMaterial({color:0x00ffff,wireframe:true});
-	var tileSize = 4;
+	var tileSize = 6;
 
 	function findContainedBlock(x,y,z,volumeMap) {
 		var blocks = [];
@@ -78,7 +78,12 @@
 					aTile.z != myTile.z )) {
 
 					for (var j = 0; j < aTile.cells.length; j++) {
-						aTile.cells[j].cube.visible = false;
+						for (var prop in aTile.cells[j].voxels) {
+							var voxels = aTile.cells[j].voxels[prop];
+							for (var k = 0; k < voxels.length; k++) {
+								voxels[k].cube.visible = false;
+							}
+						}
 					}
 
 					aTile.visible = false;
@@ -89,7 +94,12 @@
 					aTile.z == myTile.z)) {
 
 					for (var j = 0; j < aTile.cells.length; j++) {
-						aTile.cells[j].cube.visible = true;
+						for (var prop in aTile.cells[j].voxels) {
+							var voxels = aTile.cells[j].voxels[prop];
+							for (var k = 0; k < voxels.length; k++) {
+								voxels[k].cube.visible = true;
+							}
+						}
 					}
 
 					aTile.visible = true;
@@ -160,7 +170,9 @@
 					zIndex++) {
 					var inCellMap = false;
 					for(var i = 0; i < this.cells.length; i++) {
-						inCellMap = !!this.cells[i].volumeMap.get(xIndex, yIndex, zIndex);
+						if (this.cells[i].volumeMap.get(xIndex, yIndex, zIndex)) {
+							inCellMap = true;
+						}
 					}
 
 					if (!volumeMap.get(xIndex, yIndex, zIndex) &&
@@ -169,9 +181,9 @@
 						var newCell = new OcclusionCell();
 						this.cells.push(newCell);
 						expandCell(newCell,volumeMap,xIndex,yIndex,zIndex,
-							this.x * tileSize + minX - 0.5,
-							this.y * tileSize + minY - 0.5,
-							this.z * tileSize + minZ - 0.5);
+							this.x * tileSize + minX + 0.5,
+							this.y * tileSize + minY + 0.5,
+							this.z * tileSize + minZ + 0.5);
 					}
 				}
 			}
@@ -213,7 +225,7 @@
 						);
 				}
 
-				if (x == minX + tileSize) {
+				if (x == minX + tileSize - 1) {
 					boundaryVoxel.maxXVoxel.push(
 						new BA.RebornBlock(x,y,z,colors[1],1,false)
 						);
@@ -225,7 +237,7 @@
 						);
 				}
 
-				if (y == minY + tileSize) {
+				if (y == minY + tileSize - 1) {
 					boundaryVoxel.maxYVoxel.push(
 						new BA.RebornBlock(x,y,z,colors[3],1,false)
 						);
@@ -237,7 +249,7 @@
 						);
 				}
 
-				if (z == minZ + tileSize) {
+				if (z == minZ + tileSize - 1) {
 					boundaryVoxel.maxZVoxel.push(
 						new BA.RebornBlock(x,y,z,colors[5],1,false)
 						);
