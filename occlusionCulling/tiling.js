@@ -195,14 +195,20 @@
 		this.volumeMap = new BA.VolumeMap();
 	}
 
+	function divideBoundaryVoxelInRectangles(boundaryVoxel) {
+		var result = [];
+
+		return result;
+	}
+
 	function findBoundaryVoxel( volumeMap, minX, minY, minZ ) {
 		var boundaryVoxel = {
-			minXVoxel: [],
-			maxXVoxel: [],
-			minYVoxel: [],
-			maxYVoxel: [],
-			minZVoxel: [],
-			maxZVoxel: [],
+			minXVoxel: new Uint8Array(tileSize*tileSize),
+			maxXVoxel: new Uint8Array(tileSize*tileSize),
+			minYVoxel: new Uint8Array(tileSize*tileSize),
+			maxYVoxel: new Uint8Array(tileSize*tileSize),
+			minZVoxel: new Uint8Array(tileSize*tileSize),
+			maxZVoxel: new Uint8Array(tileSize*tileSize),
 		}
 
 		var colors = [
@@ -220,39 +226,27 @@
 				z = splitCoord[2];
 
 				if (x == minX) {
-					boundaryVoxel.minXVoxel.push(
-						new BA.RebornBlock(x,y,z,colors[0],1,false)
-						);
+					boundaryVoxel.minXVoxel[y+z*tileSize] = 1;
 				}
 
 				if (x == minX + tileSize - 1) {
-					boundaryVoxel.maxXVoxel.push(
-						new BA.RebornBlock(x,y,z,colors[1],1,false)
-						);
+					boundaryVoxel.minXVoxel[y+z*tileSize] = 1;
 				}
 
 				if (y == minY) {
-					boundaryVoxel.minYVoxel.push(
-						new BA.RebornBlock(x,y,z,colors[2],1,false)
-						);
+					boundaryVoxel.minXVoxel[x+z*tileSize] = 1;
 				}
 
 				if (y == minY + tileSize - 1) {
-					boundaryVoxel.maxYVoxel.push(
-						new BA.RebornBlock(x,y,z,colors[3],1,false)
-						);
+					boundaryVoxel.minXVoxel[x+z*tileSize] = 1;
 				}
 
 				if (z == minZ) {
-					boundaryVoxel.minZVoxel.push(
-						new BA.RebornBlock(x,y,z,colors[4],1,false)
-						);
+					boundaryVoxel.minXVoxel[x+y*tileSize] = 1;
 				}
 
 				if (z == minZ + tileSize - 1) {
-					boundaryVoxel.maxZVoxel.push(
-						new BA.RebornBlock(x,y,z,colors[5],1,false)
-						);
+					boundaryVoxel.minXVoxel[x+y*tileSize] = 1;
 				}
 		}
 		return boundaryVoxel
