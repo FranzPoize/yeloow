@@ -109,6 +109,8 @@
 		}
 	}
 
+	var constructSet = true;
+
 	window.OcclusionTile = function (blocks, x, y, z, minX, minY, minZ,volumeMap) {
 		this.blocksContained = blocks;
 
@@ -122,6 +124,14 @@
 				x * tileSize + minX + 0.5,
 				y * tileSize + minY + 0.5,
 				z * tileSize + minZ + 0.5);
+			if (constructSet) {
+				constructSet = false;
+				var rectSet = constructSetList(this.cells[i].voxels.minXVoxel,tileSize);
+
+				for (var j = 0; j < rectSet.length; j++) {
+					rectSet[j].Print(tileSize,this.cells[i].voxels.minXVoxel);
+				}
+			}
 		}
 
 		this.visualBlock = new BA.RebornBlock(x * tileSize + minX + tileSize / 2,
@@ -211,14 +221,6 @@
 			maxZVoxel: new Uint8Array(tileSize*tileSize),
 		}
 
-		var colors = [
-			new THREE.MeshBasicMaterial({color:'#ff0000',opacity:0.1,transparent:true}),
-			new THREE.MeshBasicMaterial({color:'#00ff00',opacity:0.1,transparent:true}),
-			new THREE.MeshBasicMaterial({color:'#0000ff',opacity:0.1,transparent:true}),
-			new THREE.MeshBasicMaterial({color:'#ffff00',opacity:0.1,transparent:true}),
-			new THREE.MeshBasicMaterial({color:'#ff00ff',opacity:0.1,transparent:true}),
-			new THREE.MeshBasicMaterial({color:'#00ffff',opacity:0.1,transparent:true})
-			];
 		for (var coord in volumeMap.map) {
 			var splitCoord = coord.split(','),
 				x = splitCoord[0],
@@ -226,27 +228,27 @@
 				z = splitCoord[2];
 
 				if (x == minX) {
-					boundaryVoxel.minXVoxel[y+z*tileSize] = 1;
+					boundaryVoxel.minXVoxel[(parseInt(y) - minY) + (parseInt(z) - minZ) * tileSize] = 1;
 				}
 
 				if (x == minX + tileSize - 1) {
-					boundaryVoxel.minXVoxel[y+z*tileSize] = 1;
+					boundaryVoxel.minXVoxel[(parseInt(y) - minY) + (parseInt(z) - minZ) * tileSize] = 1;
 				}
 
 				if (y == minY) {
-					boundaryVoxel.minXVoxel[x+z*tileSize] = 1;
+					boundaryVoxel.minXVoxel[(parseInt(x) - minX) + (parseInt(z) - minZ) * tileSize] = 1;
 				}
 
 				if (y == minY + tileSize - 1) {
-					boundaryVoxel.minXVoxel[x+z*tileSize] = 1;
+					boundaryVoxel.minXVoxel[(parseInt(x) - minX) + (parseInt(z) - minZ) * tileSize] = 1;
 				}
 
 				if (z == minZ) {
-					boundaryVoxel.minXVoxel[x+y*tileSize] = 1;
+					boundaryVoxel.minXVoxel[(parseInt(x) - minX) + (parseInt(y) - minY) * tileSize] = 1;
 				}
 
 				if (z == minZ + tileSize - 1) {
-					boundaryVoxel.minXVoxel[x+y*tileSize] = 1;
+					boundaryVoxel.minXVoxel[(parseInt(x) - minX) + (parseInt(y) - minY) * tileSize] = 1;
 				}
 		}
 		return boundaryVoxel

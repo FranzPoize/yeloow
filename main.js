@@ -29,27 +29,27 @@ fileResult.onload = function (event) {
 	var occlusion = new OcclusionTileMap(map.blocks,map.volumeMap);
 	for (var i = 0; i < occlusion.tiles.length; i++) {
 		// TDContext.scene.add(occlusion.tiles[i].visualBlock.cube);
-		for(var j = 0; j< occlusion.tiles[i].cells.length; j++) {
-			var cell = occlusion.tiles[i].cells[j];
-			for(var k = 0; k<cell.voxels.minXVoxel.length;k++) {
-				TDContext.scene.add(cell.voxels.minXVoxel[k].cube);
-			}
-			for(var k = 0; k<cell.voxels.maxXVoxel.length;k++) {
-				TDContext.scene.add(cell.voxels.maxXVoxel[k].cube);
-			}
-			for(var k = 0; k<cell.voxels.minYVoxel.length;k++) {
-				TDContext.scene.add(cell.voxels.minYVoxel[k].cube);
-			}
-			for(var k = 0; k<cell.voxels.maxYVoxel.length;k++) {
-				TDContext.scene.add(cell.voxels.maxYVoxel[k].cube);
-			}
-			for(var k = 0; k<cell.voxels.minZVoxel.length;k++) {
-				TDContext.scene.add(cell.voxels.minZVoxel[k].cube);
-			}
-			for(var k = 0; k<cell.voxels.maxZVoxel.length;k++) {
-				TDContext.scene.add(cell.voxels.maxZVoxel[k].cube);
-			}
-		}
+		// for(var j = 0; j< occlusion.tiles[i].cells.length; j++) {
+		// 	var cell = occlusion.tiles[i].cells[j];
+		// 	for(var k = 0; k<cell.voxels.minXVoxel.length;k++) {
+		// 		TDContext.scene.add(cell.voxels.minXVoxel[k].cube);
+		// 	}
+		// 	for(var k = 0; k<cell.voxels.maxXVoxel.length;k++) {
+		// 		TDContext.scene.add(cell.voxels.maxXVoxel[k].cube);
+		// 	}
+		// 	for(var k = 0; k<cell.voxels.minYVoxel.length;k++) {
+		// 		TDContext.scene.add(cell.voxels.minYVoxel[k].cube);
+		// 	}
+		// 	for(var k = 0; k<cell.voxels.maxYVoxel.length;k++) {
+		// 		TDContext.scene.add(cell.voxels.maxYVoxel[k].cube);
+		// 	}
+		// 	for(var k = 0; k<cell.voxels.minZVoxel.length;k++) {
+		// 		TDContext.scene.add(cell.voxels.minZVoxel[k].cube);
+		// 	}
+		// 	for(var k = 0; k<cell.voxels.maxZVoxel.length;k++) {
+		// 		TDContext.scene.add(cell.voxels.maxZVoxel[k].cube);
+		// 	}
+		// }
 	}
 
 	var render = function () {
@@ -100,7 +100,7 @@ fileResult.onload = function (event) {
 
 		requestAnimationFrame( render );
 
-		occlusion.occludedEverythingButMyTile(selectPosition.x,selectPosition.y,selectPosition.z);
+		// occlusion.occludedEverythingButMyTile(selectPosition.x,selectPosition.y,selectPosition.z);
 
 		TDContext.renderer.render(TDContext.scene, TDContext.camera);
 	};
