@@ -109,8 +109,6 @@
 		}
 	}
 
-	var constructSet = true;
-
 	window.OcclusionTile = function (blocks, x, y, z, minX, minY, minZ,volumeMap) {
 		this.blocksContained = blocks;
 
@@ -124,14 +122,13 @@
 				x * tileSize + minX + 0.5,
 				y * tileSize + minY + 0.5,
 				z * tileSize + minZ + 0.5);
-			if (constructSet) {
-				constructSet = false;
-				var rectSet = constructSetList(this.cells[i].voxels.minXVoxel,tileSize);
-
-				for (var j = 0; j < rectSet.length; j++) {
-					rectSet[j].Print(tileSize,this.cells[i].voxels.minXVoxel);
-				}
-			}
+			constructSetList(this.cells[i].voxels.minXVoxel,tileSize);
+			constructSetList(this.cells[i].voxels.maxXVoxel,tileSize);
+			constructSetList(this.cells[i].voxels.minYVoxel,tileSize);
+			constructSetList(this.cells[i].voxels.maxYVoxel,tileSize);
+			constructSetList(this.cells[i].voxels.minZVoxel,tileSize);
+			constructSetList(this.cells[i].voxels.maxZVoxel,tileSize);
+			
 		}
 
 		this.visualBlock = new BA.RebornBlock(x * tileSize + minX + tileSize / 2,
