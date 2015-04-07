@@ -1,15 +1,14 @@
 (function(window) {
-	window.DynamicLink = function(header, set) {
+	window.DancingLink = function(set) {
 		this.prevInRow = null;
 		this.nextInRow = null;
 		this.prevInCol = null;
 		this.nextInCol = null;
 
-		this.header = header;
 		this.set = set;
 	}
 
-	DynamicLink.prototype.removeRow = function() {
+	DancingLink.prototype.removeRow = function() {
 		var currentLink = this;
 		do {
 
@@ -21,7 +20,7 @@
 		} while (this != currentLink);
 	}
 
-	DynamicLink.prototype.removeCol = function() {
+	DancingLink.prototype.removeCol = function() {
 		var currentLink = this;
 
 		do {
@@ -32,12 +31,41 @@
 		} while (this != currentLink);
 	}
 
-	window.DynamicLinkHeader = function(index) {
-		DynamicLink.call(this);
+	window.DancingLinkHeader = function(index) {
+		DancingLink.call(this);
 
 		this.count = 0;
 		this.voxelIndex = index;
 	}
 
-	DynamicLinkHeader.prototype = Object.create(DynamicLink.prototype);
+	DancingLinkHeader.prototype = Object.create(DancingLink.prototype);
+
+	// DancingLinkHeader.prototype.addRow = function(set) {
+	// 	var headerTemp = this.nextInRow;
+
+	// 	for (var i = 0; i < set.minI; i++) {
+	// 		headerTemp = headerTemp.nextInRow;
+	// 	}
+
+	// 	for (var i = 0; i < set.maxI;i++) {
+	// 		var link = new DancingLink(set);
+
+	// 		link.prevInCol = header;
+	// 		link.nextInCol = header.nextInCol;
+	// 		header.nextInCol = link;
+
+	// 		if (!header.prevInCol) {
+	// 			header.prevInCol = link;
+	// 		}
+
+	// 		if (prevLink) {
+	// 			link.prevInRow = prevLink;
+	// 			prevLink.nextInRow = link;
+	// 			link.nextInRow = prevLink.nextInRow;
+	// 			prevLink.nextInRow.prevInRow = link;
+	// 		}
+			
+	// 		prevLink = link;
+	// 	}
+	// }
 })(window);

@@ -41,8 +41,25 @@
 		console.log("");
 	};
 
+	Set.prototype.constructArray = function(tileSize,boundaryVoxel) {
+		var setArray = [];
+
+		for (var i = 0; i < tileSize; i++) {
+			for (var j = 0; j < tileSize; j++) {
+				if (i >= this.minI && j >= this.minJ && i <= this.maxI && j <= this.maxJ) {
+					setArray.push(1);
+				} else if (boundaryVoxel[i+j*tileSize] == 1) {
+					setArray.push(0);
+				}
+			}
+		}
+		return setArray;
+	}
+
 	window.constructSetList = function(boundaryVoxel,tileSize) {
 		var setList = [];
+
+		var header = constructHeaderFromBoundaryVoxels(boundaryVoxel);
 		//starting simple we just add every square that is not filled to the set list
 		for (var i = 0;i < tileSize;i++) {
 			for (var j = 0; j < tileSize; j++) {
@@ -50,7 +67,16 @@
 			}
 		}
 
-		return setList;
+		for (var j = 0; j < setList.length; j++) {
+			var setArray = setList[j].constructArray(tileSize, boundaryVoxel);
+
+			addRowToDancingMatrix(header,setArray);
+		}
+
+		return {
+			header:header,
+			sets:setList
+		};
 	}
 
 	function expandSet(boundaryVoxel, tileSize, minI, minJ, setList) {
@@ -81,5 +107,73 @@
 			}
 
 		}
+	}
+
+	function addRowToDancingMatrix(header, setArray) {
+		var prevLink,
+			firstLink;
+		for (var i = 0; i < setArray.length; i++) {
+			var item = setArray[i];
+
+			if (item) {
+				var link = new DancingLink(setArray);
+
+				if (prevLink) {
+					link.prevInRow = prevLink;
+					prevLink.nextInRow = link;
+				}
+
+				link.prevInCol = header;
+				header.nextInCol.prevInCol = link;
+				link.nextInCol = header.nextInCol;
+				header.nextInCol = link;
+
+				if (!firstLink) {
+					firstLink = link;
+				}
+
+				header.count += 1;
+
+				prevLink = link;
+			}
+
+			header = header.nextInRow;
+		}
+
+		prevLink.nextInRow = firstLink;
+		firstLink.prevInRow = prevLink;
+	}
+
+	window.constructHeaderFromBoundaryVoxels = function(boundaryVoxel) {
+		var header,
+			prevHeader;
+
+		for (var j = 0; j < boundaryVoxel.length; j++) {
+			if (boundaryVoxel[j]) {
+				var linkHeader = new DancingLinkHeader(j);
+
+				if (prevHeader) {
+					prevHeader.nextInRow = linkHeader;
+					linkHeader.prevInRow = prevHeader;
+				}
+
+				// Edge case
+				if (!header) {
+					header = linkHeader;
+				}
+
+				if (j === boundaryVoxel.length - 1) {
+					header.prevInRow = linkHeader;
+					linkHeader.nextInRow = header;
+				}
+
+				linkHeader.nextInCol = linkHeader;
+				linkHeader.prevInCol = linkHeader;
+
+				prevHeader = linkHeader;
+			}
+		}
+
+		return header;
 	}
 })(window)
