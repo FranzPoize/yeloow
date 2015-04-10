@@ -65,7 +65,6 @@
 	window.OcclusionTileMap.prototype.findContainingTile = function(x, y, z) {
 		return this.tileVolumeMap.get(Math.floor((x - this.minX ) / tileSize ), Math.floor((y - this.minY ) / tileSize ), Math.floor((z - this.minZ ) / tileSize));
 	}
-
 	window.OcclusionTileMap.prototype.occludedEverythingButMyTile = function(x, y, z) {
 		var myTile = this.findContainingTile(x, y, z);
 		if (myTile) {
@@ -123,11 +122,11 @@
 				y * tileSize + minY + 0.5,
 				z * tileSize + minZ + 0.5);
 			constructSetList(this.cells[i].voxels.minXVoxel,tileSize);
-			constructSetList(this.cells[i].voxels.maxXVoxel,tileSize);
-			constructSetList(this.cells[i].voxels.minYVoxel,tileSize);
-			constructSetList(this.cells[i].voxels.maxYVoxel,tileSize);
-			constructSetList(this.cells[i].voxels.minZVoxel,tileSize);
-			constructSetList(this.cells[i].voxels.maxZVoxel,tileSize);
+			// constructSetList(this.cells[i].voxels.maxXVoxel,tileSize);
+			// constructSetList(this.cells[i].voxels.minYVoxel,tileSize);
+			// constructSetList(this.cells[i].voxels.maxYVoxel,tileSize);
+			// constructSetList(this.cells[i].voxels.minZVoxel,tileSize);
+			// constructSetList(this.cells[i].voxels.maxZVoxel,tileSize);
 			
 		}
 

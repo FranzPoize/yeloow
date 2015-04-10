@@ -1,9 +1,10 @@
 (function(window) {
-	window.DancingLink = function(set) {
+	window.DancingLink = function(set,header) {
 		this.prevInRow = null;
 		this.nextInRow = null;
 		this.prevInCol = null;
 		this.nextInCol = null;
+		this.header = header;
 
 		this.set = set;
 	}

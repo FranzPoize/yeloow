@@ -70,12 +70,18 @@
 		for (var j = 0; j < setList.length; j++) {
 			var setArray = setList[j].constructArray(tileSize, boundaryVoxel);
 
-			addRowToDancingMatrix(header,setArray);
+			addRowToDancingMatrix(header.nextInRow,{array:setArray,set:setList[j]});
 		}
+		var solutionSet = [],
+			result = {};
+		findCoveringSet(header,solutionSet,result);
+
+		result.solution.forEach(function(set) { set.set.Print(tileSize,boundaryVoxel); });
 
 		return {
 			header:header,
-			sets:setList
+			sets:setList,
+			result:result
 		};
 	}
 
@@ -112,11 +118,11 @@
 	function addRowToDancingMatrix(header, setArray) {
 		var prevLink,
 			firstLink;
-		for (var i = 0; i < setArray.length; i++) {
-			var item = setArray[i];
+		for (var i = 0; i < setArray.array.length; i++) {
+			var item = setArray.array[i];
 
 			if (item) {
-				var link = new DancingLink(setArray);
+				var link = new DancingLink(setArray,header);
 
 				if (prevLink) {
 					link.prevInRow = prevLink;
@@ -145,8 +151,11 @@
 	}
 
 	window.constructHeaderFromBoundaryVoxels = function(boundaryVoxel) {
-		var header,
+		var header = {},
 			prevHeader;
+
+		header.nextInRow = header;
+		header.prevInRow = header;
 
 		for (var j = 0; j < boundaryVoxel.length; j++) {
 			if (boundaryVoxel[j]) {
@@ -158,22 +167,121 @@
 				}
 
 				// Edge case
-				if (!header) {
-					header = linkHeader;
+				if (header.nextInRow == header) {
+					header.nextInRow = linkHeader,
+					linkHeader.prevInRow = header;
 				}
 
-				if (j === boundaryVoxel.length - 1) {
-					header.prevInRow = linkHeader;
-					linkHeader.nextInRow = header;
-				}
 
 				linkHeader.nextInCol = linkHeader;
 				linkHeader.prevInCol = linkHeader;
 
 				prevHeader = linkHeader;
+
+				linkHeader.nextInRow = header;
+				header.prevInRow = linkHeader;
 			}
 		}
 
 		return header;
+	}
+
+	function findCoveringSet(header, solutionSet, result) {
+		if (header.nextInRow == header) {
+			if (!result.solution || result.length > solutionSet.length) {
+				result.solution = solutionSet.map(function(set) { return set.set; });
+				result.length = solutionSet.length;
+				return 0;
+			}
+		} else if (result.length === 1) {
+			return 0
+		} else {
+
+			var currentHeader = header.nextInRow,
+				chosenHeader = header.nextInRow;
+
+			while(header != currentHeader) {
+
+				if (chosenHeader.count < currentHeader) {
+					chosenHeader = currentHeader;
+				}
+
+				currentHeader = currentHeader.nextInRow;
+
+			}
+
+			coverCol(chosenHeader);
+
+			var row = chosenHeader.nextInCol;
+
+			while(row != chosenHeader) {
+				solutionSet.push(row);
+
+				var link = row.nextInRow;
+
+				while(link != row) {
+					coverCol(link.header);
+					link = link.nextInRow;
+				}
+
+				findCoveringSet(header, solutionSet, result);
+
+				if (result.length === 1) {
+					return 0;
+				}
+
+				link = solutionSet.pop().prevInRow;
+
+				while(link != row) {
+					uncoverCol(link.header);
+					link = link.prevInRow;
+				}
+
+				row = row.nextInCol;
+			}
+
+			uncoverCol(chosenHeader);
+
+			return 0;
+		}
+	}
+
+	function coverCol(header) {
+		header.nextInRow.prevInRow = header.prevInRow;
+		header.prevInRow.nextInRow = header.nextInRow;
+
+		var row = header.nextInCol;
+		while(row != header) {
+			var col = row.nextInRow;
+			while(col != row) {
+				col.nextInCol.prevInCol = col.prevInCol;
+				col.prevInCol.nextInCol = col.nextInCol;
+				
+				col.header.count = col.header.count - 1;
+
+				col = col.nextInRow;
+			}
+
+			row = row.nextInCol;
+		}
+	}
+
+	function uncoverCol(header) {
+		var row = header.prevInCol;
+		while(row != header) {
+			var col = row.prevInRow;
+			while(col != row) {
+				col.nextInCol.prevInCol = col;
+				col.prevInCol.nextInCol = col;
+
+				col.header.count = col.header.count + 1;
+
+				col = col.prevInRow;
+			}
+			row = row.prevInCol;
+		}
+
+		header.prevInRow.nextInRow = header;
+		header.nextInRow.prevInRow = header;
 	}
 })(window)
