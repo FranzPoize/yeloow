@@ -27,10 +27,134 @@ fileResult.onload = function (event) {
 	}
 
 	var occlusion = new OcclusionTileMap(map.blocks,map.volumeMap);
+
+	function makeQuad(a, b, c, d, scene, color) {
+		var geometry = new THREE.Geometry();
+
+		geometry.vertices.push( new THREE.Vector3( a.x, a.y, a.z ) );
+		geometry.vertices.push( new THREE.Vector3( b.x, b.y, b.z ) );
+		geometry.vertices.push( new THREE.Vector3( c.x, c.y, c.z ) );
+		geometry.vertices.push( new THREE.Vector3( d.x, d.y, d.z ) );
+
+		geometry.faces.push( new THREE.Face3( 0, 1, 2 ) ); // counter-clockwise winding order
+		geometry.faces.push( new THREE.Face3( 0, 2, 3 ) );
+
+		geometry.computeFaceNormals();
+		geometry.computeVertexNormals();
+		var material = new THREE.MeshBasicMaterial({ color: color, opacity:0.1, transparent: true});
+		material.side = THREE.DoubleSide
+		material.side = THREE.DoubleSide
+		var mesh = new THREE.Mesh( geometry, material );
+		scene.add(mesh);
+		var materialWire = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, wireframe: true});
+		var meshWire = new THREE.Mesh( geometry, materialWire );
+		scene.add(meshWire);
+	}
+
 	for (var i = 0; i < occlusion.tiles.length; i++) {
-		// TDContext.scene.add(occlusion.tiles[i].visualBlock.cube);
-		// for(var j = 0; j< occlusion.tiles[i].cells.length; j++) {
-		// 	var cell = occlusion.tiles[i].cells[j];
+		//TDContext.scene.add(occlusion.tiles[i].visualBlock.cube);
+		 for(var j = 0; j< occlusion.tiles[i].cells.length; j++) {
+			 var cell = occlusion.tiles[i].cells[j];
+			 for (var u = 0; u < cell.portals.plusX.result.solution.length; u++) {
+				 var portal = cell.portals.plusX.result.solution[u];
+				 var baseCoord = {
+					 x:occlusion.tiles[i].x,
+					 y:occlusion.tiles[i].y,
+					 z:occlusion.tiles[i].z
+				 }
+				 makeQuad({
+					 x: occlusion.minX + (baseCoord.x+1)*4,
+					 y: occlusion.minY + baseCoord.y*4 + portal.set.minJ,
+					 z: occlusion.minZ + baseCoord.z*4 + portal.set.minI
+				 },{
+					 x: occlusion.minX + (baseCoord.x+1)*4,
+					 y: occlusion.minY + baseCoord.y*4 + portal.set.maxJ+1,
+					 z: occlusion.minZ + baseCoord.z*4 + portal.set.minI
+				 },{
+					 x: occlusion.minX + (baseCoord.x+1)*4,
+					 y: occlusion.minY + baseCoord.y*4 + portal.set.maxJ+1,
+					 z: occlusion.minZ + baseCoord.z*4 + portal.set.maxI+1
+				 },{
+					 x: occlusion.minX + (baseCoord.x+1)*4,
+					 y: occlusion.minY + baseCoord.y*4 + portal.set.minJ,
+					 z: occlusion.minZ + baseCoord.z*4 + portal.set.maxI+1
+				 },TDContext.scene,0xffff00);
+				 }
+			 for (var u = 0; u < cell.portals.plusY.result.solution.length; u++) {
+				 var portal = cell.portals.plusY.result.solution[u];
+				 var baseCoord = {
+					 x:occlusion.tiles[i].x,
+					 y:occlusion.tiles[i].y,
+					 z:occlusion.tiles[i].z
+				 }
+				 makeQuad({
+					 x: occlusion.minX + baseCoord.x*4 + portal.set.minJ,
+					 y: occlusion.minY + (baseCoord.y+1)*4,
+					 z: occlusion.minZ + baseCoord.z*4 + portal.set.minI
+				 },{
+					 x: occlusion.minX + baseCoord.x*4 + portal.set.maxJ+1,
+					 y: occlusion.minY + (baseCoord.y+1)*4,
+					 z: occlusion.minZ + baseCoord.z*4 + portal.set.minI
+				 },{
+					 x: occlusion.minX + baseCoord.x*4 + portal.set.maxJ+1,
+					 y: occlusion.minY + (baseCoord.y+1)*4,
+					 z: occlusion.minZ + baseCoord.z*4 + portal.set.maxI+1
+				 },{
+					 x: occlusion.minX + baseCoord.x*4 + portal.set.minJ,
+					 y: occlusion.minY + (baseCoord.y+1)*4,
+					 z: occlusion.minZ + baseCoord.z*4 + portal.set.maxI+1
+				 },TDContext.scene,0xffff00);
+			 }
+			 for (var u = 0; u < cell.portals.minusY.result.solution.length; u++) {
+				 var portal = cell.portals.minusY.result.solution[u];
+				 var baseCoord = {
+					 x:occlusion.tiles[i].x,
+					 y:occlusion.tiles[i].y,
+					 z:occlusion.tiles[i].z
+				 }
+				 makeQuad({
+					 x: occlusion.minX + baseCoord.x*4 + portal.set.minJ,
+					 y: occlusion.minY + baseCoord.y*4,
+					 z: occlusion.minZ + baseCoord.z*4 + portal.set.minI
+				 },{
+					 x: occlusion.minX + baseCoord.x*4 + portal.set.maxJ+1,
+					 y: occlusion.minY + baseCoord.y*4,
+					 z: occlusion.minZ + baseCoord.z*4 + portal.set.minI
+				 },{
+					 x: occlusion.minX + baseCoord.x*4 + portal.set.maxJ+1,
+					 y: occlusion.minY + baseCoord.y*4,
+					 z: occlusion.minZ + baseCoord.z*4 + portal.set.maxI+1
+				 },{
+					 x: occlusion.minX + baseCoord.x*4 + portal.set.minJ,
+					 y: occlusion.minY + baseCoord.y*4,
+					 z: occlusion.minZ + baseCoord.z*4 + portal.set.maxI+1
+				 },TDContext.scene,0xff00ff);
+			}
+			for (var u = 0; u < cell.portals.minusZ.result.solution.length; u++) {
+				 var portal = cell.portals.minusZ.result.solution[u];
+				 var baseCoord = {
+					 x:occlusion.tiles[i].x,
+					 y:occlusion.tiles[i].y,
+					 z:occlusion.tiles[i].z
+				 }
+				 makeQuad({
+					 x: occlusion.minX + baseCoord.x*4 + portal.set.minJ,
+					 y: occlusion.minY + baseCoord.y*4 + portal.set.minI,
+					 z: occlusion.minZ + baseCoord.z*4
+				 },{
+					 x: occlusion.minX + baseCoord.x*4 + portal.set.maxJ+1,
+					 y: occlusion.minY + baseCoord.y*4 + portal.set.minI,
+					 z: occlusion.minZ + baseCoord.z*4
+				 },{
+					 x: occlusion.minX + baseCoord.x*4 + portal.set.maxJ+1,
+					 y: occlusion.minY + baseCoord.y*4 + portal.set.maxI+1,
+					 z: occlusion.minZ + baseCoord.z*4
+				 },{
+					 x: occlusion.minX + baseCoord.x*4 + portal.set.minJ,
+					 y: occlusion.minY + baseCoord.y*4 + portal.set.maxI+1,
+					 z: occlusion.minZ + baseCoord.z*4
+				 },TDContext.scene,0x0000ff);
+			 }
 		// 	for(var k = 0; k<cell.voxels.minXVoxel.length;k++) {
 		// 		TDContext.scene.add(cell.voxels.minXVoxel[k].cube);
 		// 	}
@@ -49,10 +173,11 @@ fileResult.onload = function (event) {
 		// 	for(var k = 0; k<cell.voxels.maxZVoxel.length;k++) {
 		// 		TDContext.scene.add(cell.voxels.maxZVoxel[k].cube);
 		// 	}
-		// }
+		 }
 	}
 
 	var render = function () {
+		//console.log('x:' + TDContext.camera.position.x + ',y:' + TDContext.camera.position.y);
 		TDContext.playerLight.position.set( TDContext.camera.position.x, TDContext.camera.position.y, TDContext.camera.position.z );
 
 		var look = new THREE.Vector3(0,0,-1);
@@ -100,7 +225,7 @@ fileResult.onload = function (event) {
 
 		requestAnimationFrame( render );
 
-		// occlusion.occludedEverythingButMyTile(selectPosition.x,selectPosition.y,selectPosition.z);
+		//occlusion.occludedEverythingButMyTile(selectPosition.x,selectPosition.y,selectPosition.z);
 
 		TDContext.renderer.render(TDContext.scene, TDContext.camera);
 	};

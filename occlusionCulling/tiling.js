@@ -2,7 +2,7 @@
 
 (function(window) {
 	var material = new THREE.MeshBasicMaterial({color:0x00ffff,wireframe:true});
-	var tileSize = 6;
+	var tileSize = 4;
 
 	function findContainedBlock(x,y,z,volumeMap) {
 		var blocks = [];
@@ -56,7 +56,6 @@
 						tile = new OcclusionTile(blocksContained, xIndex, yIndex, zIndex, this.minX, this.minY, this.minZ,volumeMap);
 					this.tiles.push(tile);
 					this.tileVolumeMap.insert(tile.x, tile.y, tile.z, tile);
-
 				}
 			}
 		}
@@ -76,35 +75,36 @@
 					aTile.y != myTile.y ||
 					aTile.z != myTile.z )) {
 
-					for (var j = 0; j < aTile.cells.length; j++) {
+					/*for (var j = 0; j < aTile.cells.length; j++) {
 						for (var prop in aTile.cells[j].voxels) {
 							var voxels = aTile.cells[j].voxels[prop];
 							for (var k = 0; k < voxels.length; k++) {
 								voxels[k].cube.visible = false;
 							}
 						}
-					}
+						}*/
 
-					aTile.visible = false;
+					aTile.visualBlock.cube.visible = false;
 
 				} else if (!aTile.visible &&
 					(aTile.x == myTile.x &&
 					aTile.y == myTile.y &&
 					aTile.z == myTile.z)) {
 
-					for (var j = 0; j < aTile.cells.length; j++) {
+					/*for (var j = 0; j < aTile.cells.length; j++) {
 						for (var prop in aTile.cells[j].voxels) {
 							var voxels = aTile.cells[j].voxels[prop];
 							for (var k = 0; k < voxels.length; k++) {
 								voxels[k].cube.visible = true;
 							}
 						}
-					}
+						}*/
 
-					aTile.visible = true;
+					aTile.visualBlock.cube.visible = true;
 
 				}
 			}
+			myTile.visualBlock.cube.visible = true;
 		}
 	}
 
@@ -121,20 +121,147 @@
 				x * tileSize + minX + 0.5,
 				y * tileSize + minY + 0.5,
 				z * tileSize + minZ + 0.5);
-			constructSetList(this.cells[i].voxels.minXVoxel,tileSize);
-			// constructSetList(this.cells[i].voxels.maxXVoxel,tileSize);
-			// constructSetList(this.cells[i].voxels.minYVoxel,tileSize);
-			// constructSetList(this.cells[i].voxels.maxYVoxel,tileSize);
-			// constructSetList(this.cells[i].voxels.minZVoxel,tileSize);
-			// constructSetList(this.cells[i].voxels.maxZVoxel,tileSize);
-			
+			var boundarySets = {
+				minusX: constructSetList(this.cells[i].voxels.minXVoxel,tileSize),
+				plusX: constructSetList(this.cells[i].voxels.maxXVoxel,tileSize),
+				minusY: constructSetList(this.cells[i].voxels.minYVoxel,tileSize),
+				plusY: constructSetList(this.cells[i].voxels.maxYVoxel,tileSize),
+				minusZ: constructSetList(this.cells[i].voxels.minZVoxel,tileSize),
+				plusZ: constructSetList(this.cells[i].voxels.maxZVoxel,tileSize)
+			}
+
+			var portals = convertBoundarySetsToCoords(boundarySets, this, tileSize);
+			this.cells[i].portals = portals;
 		}
 
-		this.visualBlock = new BA.RebornBlock(x * tileSize + minX + tileSize / 2,
-			y * tileSize + minY + tileSize / 2,
-			z * tileSize + minZ + tileSize / 2,
-			material , tileSize, false);
+		//this.visualBlock = new BA.RebornBlock(x * tileSize + minX + tileSize / 2,
+		//y * tileSize + minY + tileSize / 2,
+		//z * tileSize + minZ + tileSize / 2,
+		//material , tileSize, false);
 		this.visible = true;
+	}
+
+	function convertBoundary(set, cb) {
+		cb({
+			min: set.minI,
+			max set.minI + 1
+		}, {
+			min: set.minJ,
+			max set.minJ + 1
+		});
+	}
+
+	function convertBoundarySetsToCoords(boundarySets, tile, tileSize) {
+		var baseCoord = {
+				x:tile.x,
+				y:tile.y,
+				z:tile.z
+			},
+			portals = {};
+
+		portals.minusX = boundarySets.minusX.result.solution.map(function(set) {
+			return convertBoundary(set, function(variantI, variantJ) {
+				return {
+					start: {
+						x: baseCoord.x * tileSize,
+						y: baseCoord.y * tileSize + variantJ.min,
+						z: baseCoord.z * tileSize + vartiantI.min
+					},
+					end: {
+						x: baseCoord.x * tileSize,
+						y: baseCoord.y * tileSize + variantJ.max + 1,
+						z: baseCoord.z * tileSize + vartiantI.max + 1,
+					}
+				}
+			});
+		});
+
+		portals.plusX = boundarySets.plusX.result.solution.map(function(set) {
+			return convertBoundary(set, function(invariant, variantI, variantJ) {
+				return {
+					start: {
+						x: (baseCoord.x + 1) * tileSize,
+						y: baseCoord.y * tileSize + variantJ.min,
+						z: baseCoord.z * tileSize + vartiantI.min
+					},
+					end: {
+						x: (baseCoord.x + 1) * tileSize,
+						y: baseCoord.y * tileSize + variantJ.max + 1,
+						z: baseCoord.z * tileSize + vartiantI.max + 1,
+					}
+				}
+			});
+		});
+
+		portals.minusY = boundarySets.minusY.result.solution.map(function(set) {
+			return convertBoundary(set, function(invariant, variantI, variantJ) {
+				return {
+					start: {
+						x: baseCoord.x * tileSize + variantJ.min,
+						y: baseCoord.y * tileSize,
+						z: baseCoord.z * tileSize + vartiantI.min
+					},
+					end: {
+						x: baseCoord.x * tileSize + variantJ.max + 1,
+						y: baseCoord.y * tileSize,
+						z: baseCoord.z * tileSize + vartiantI.max + 1,
+					}
+				}
+			});
+		});
+
+		portals.plusY = boundarySets.plusY.result.solution.map(function(set) {
+			return convertBoundary(set, function(invariant, variantI, variantJ) {
+				return {
+					start: {
+						x: baseCoord.x * tileSize + variantJ.min,
+						y: (baseCoord.y + 1) * tileSize,
+						z: baseCoord.z * tileSize + vartiantI.min
+					},
+					end: {
+						x: baseCoord.x * tileSize + variantJ.max + 1,
+						y: (baseCoord.y + 1) * tileSize,
+						z: baseCoord.z * tileSize + vartiantI.max + 1,
+					}
+				}
+			});
+		});
+
+		portals.minusZ = boundarySets.minusZ.result.solution.map(function(set) {
+			return convertBoundary(set, function(invariant, variantI, variantJ) {
+				return {
+					start: {
+						x: baseCoord.x * tileSize + variantJ.min,
+						y: baseCoord.y * tileSize + vartiantI.min,
+						z: baseCoord.z * tileSize
+					},
+					end: {
+						x: baseCoord.x * tileSize + variantJ.max + 1,
+						y: baseCoord.y * tileSize + vartiantI.max + 1,
+						z: baseCoord.z * tileSize
+					}
+				}
+			});
+		});
+
+		portals.plusY = boundarySets.plusY.result.solution.map(function(set) {
+			return convertBoundary(set, function(invariant, variantI, variantJ) {
+				return {
+					start: {
+						x: baseCoord.x * tileSize + variantJ.min,
+						y: baseCoord.y * tileSize + vartiantI.min,
+						z: (baseCoord.z + 1) * tileSize
+					},
+					end: {
+						x: baseCoord.x * tileSize + variantJ.max + 1,
+						y: baseCoord.y * tileSize + vartiantI.max + 1,
+						z: (baseCoord.z + 1) * tileSize
+					}
+				}
+			});
+		});
+
+		return portals;
 	}
 
 	function expandCell(newCell,volumeMap,x,y,z,minX,minY,minZ,material) {
@@ -201,12 +328,6 @@
 		this.volumeMap = new BA.VolumeMap();
 	}
 
-	function divideBoundaryVoxelInRectangles(boundaryVoxel) {
-		var result = [];
-
-		return result;
-	}
-
 	function findBoundaryVoxel( volumeMap, minX, minY, minZ ) {
 		var boundaryVoxel = {
 			minXVoxel: new Uint8Array(tileSize*tileSize),
@@ -219,32 +340,32 @@
 
 		for (var coord in volumeMap.map) {
 			var splitCoord = coord.split(','),
-				x = splitCoord[0],
-				y = splitCoord[1],
-				z = splitCoord[2];
+				x = parseInt(splitCoord[0]),
+				y = parseInt(splitCoord[1]),
+				z = parseInt(splitCoord[2]);
 
-				if (x == minX) {
-					boundaryVoxel.minXVoxel[(parseInt(y) - minY) + (parseInt(z) - minZ) * tileSize] = 1;
+				if (x === minX) {
+					boundaryVoxel.minXVoxel[(y - minY) + (z - minZ) * tileSize] = 1;
 				}
 
-				if (x == minX + tileSize - 1) {
-					boundaryVoxel.minXVoxel[(parseInt(y) - minY) + (parseInt(z) - minZ) * tileSize] = 1;
+				if (x === minX + tileSize - 1) {
+					boundaryVoxel.maxXVoxel[(y - minY) + (z - minZ) * tileSize] = 1;
 				}
 
-				if (y == minY) {
-					boundaryVoxel.minXVoxel[(parseInt(x) - minX) + (parseInt(z) - minZ) * tileSize] = 1;
+				if (y === minY) {
+					boundaryVoxel.minYVoxel[(x - minX) + (z - minZ) * tileSize] = 1;
 				}
 
-				if (y == minY + tileSize - 1) {
-					boundaryVoxel.minXVoxel[(parseInt(x) - minX) + (parseInt(z) - minZ) * tileSize] = 1;
+				if (y === minY + tileSize - 1) {
+					boundaryVoxel.maxYVoxel[(x - minX) + (z - minZ) * tileSize] = 1;
 				}
 
-				if (z == minZ) {
-					boundaryVoxel.minXVoxel[(parseInt(x) - minX) + (parseInt(y) - minY) * tileSize] = 1;
+				if (z === minZ) {
+					boundaryVoxel.minZVoxel[(x - minX) + (y - minY) * tileSize] = 1;
 				}
 
-				if (z == minZ + tileSize - 1) {
-					boundaryVoxel.minXVoxel[(parseInt(x) - minX) + (parseInt(y) - minY) * tileSize] = 1;
+				if (z === minZ + tileSize - 1) {
+					boundaryVoxel.maxZVoxel[(x - minX) + (y - minY) * tileSize] = 1;
 				}
 		}
 		return boundaryVoxel

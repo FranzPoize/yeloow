@@ -28,7 +28,7 @@
 			for (var j = 0; j < tileSize; j++) {
 				if (i >= this.minI && j >= this.minJ && i <= this.maxI && j <= this.maxJ) {
 					row += "1,";
-				} else if (boundaryVoxel[i+j*tileSize] == 0) {
+				} else if (boundaryVoxel[i*tileSize+j] == 0) {
 					row += "2,";
 				} else {
 					row+= "0,";
@@ -48,8 +48,10 @@
 			for (var j = 0; j < tileSize; j++) {
 				if (i >= this.minI && j >= this.minJ && i <= this.maxI && j <= this.maxJ) {
 					setArray.push(1);
-				} else if (boundaryVoxel[i+j*tileSize] == 1) {
+				} else if (!boundaryVoxel[j+i*tileSize] == 1) {
 					setArray.push(0);
+				} else {
+					setArray.push(2);
 				}
 			}
 		}
@@ -73,14 +75,12 @@
 			addRowToDancingMatrix(header.nextInRow,{array:setArray,set:setList[j]});
 		}
 		var solutionSet = [],
-			result = {};
+			result = {
+				solution:[]
+			};
 		findCoveringSet(header,solutionSet,result);
 
-		result.solution.forEach(function(set) { set.set.Print(tileSize,boundaryVoxel); });
-
 		return {
-			header:header,
-			sets:setList,
 			result:result
 		};
 	}
@@ -88,14 +88,14 @@
 	function expandSet(boundaryVoxel, tileSize, minI, minJ, setList) {
 		for (var i = minI; i < tileSize; i++) {
 
-			if (boundaryVoxel[i+minJ*tileSize]) {
+			if (boundaryVoxel[i*tileSize+minJ]) {
 
 				for (var j = minJ; j < tileSize; j++) {
 					var rowIsOk = true;
 
 					for (var rowI = minI; rowI <= i; rowI++) {
 
-						if (!boundaryVoxel[rowI+j*tileSize]) {
+						if (!boundaryVoxel[rowI*tileSize+j]) {
 							rowIsOk = false;
 						}
 
@@ -121,7 +121,7 @@
 		for (var i = 0; i < setArray.array.length; i++) {
 			var item = setArray.array[i];
 
-			if (item) {
+			if (item === 1) {
 				var link = new DancingLink(setArray,header);
 
 				if (prevLink) {
@@ -141,9 +141,12 @@
 				header.count += 1;
 
 				prevLink = link;
+				
 			}
 
-			header = header.nextInRow;
+			if (item) {
+				header = header.nextInRow;
+			}
 		}
 
 		prevLink.nextInRow = firstLink;
@@ -152,7 +155,8 @@
 
 	window.constructHeaderFromBoundaryVoxels = function(boundaryVoxel) {
 		var header = {},
-			prevHeader;
+			prevHeader,
+			length = 0;
 
 		header.nextInRow = header;
 		header.prevInRow = header;
@@ -160,6 +164,7 @@
 		for (var j = 0; j < boundaryVoxel.length; j++) {
 			if (boundaryVoxel[j]) {
 				var linkHeader = new DancingLinkHeader(j);
+				length++;
 
 				if (prevHeader) {
 					prevHeader.nextInRow = linkHeader;
@@ -183,12 +188,13 @@
 			}
 		}
 
+		header.length = length;
 		return header;
 	}
 
 	function findCoveringSet(header, solutionSet, result) {
 		if (header.nextInRow == header) {
-			if (!result.solution || result.length > solutionSet.length) {
+			if (!result.solution.length || result.length > solutionSet.length) {
 				result.solution = solutionSet.map(function(set) { return set.set; });
 				result.length = solutionSet.length;
 				return 0;
