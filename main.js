@@ -51,131 +51,6 @@ fileResult.onload = function (event) {
 		scene.add(meshWire);
 	}
 
-	for (var i = 0; i < occlusion.tiles.length; i++) {
-		//TDContext.scene.add(occlusion.tiles[i].visualBlock.cube);
-		 for(var j = 0; j< occlusion.tiles[i].cells.length; j++) {
-			 var cell = occlusion.tiles[i].cells[j];
-			 for (var u = 0; u < cell.portals.plusX.result.solution.length; u++) {
-				 var portal = cell.portals.plusX.result.solution[u];
-				 var baseCoord = {
-					 x:occlusion.tiles[i].x,
-					 y:occlusion.tiles[i].y,
-					 z:occlusion.tiles[i].z
-				 }
-				 makeQuad({
-					 x: occlusion.minX + (baseCoord.x+1)*4,
-					 y: occlusion.minY + baseCoord.y*4 + portal.set.minJ,
-					 z: occlusion.minZ + baseCoord.z*4 + portal.set.minI
-				 },{
-					 x: occlusion.minX + (baseCoord.x+1)*4,
-					 y: occlusion.minY + baseCoord.y*4 + portal.set.maxJ+1,
-					 z: occlusion.minZ + baseCoord.z*4 + portal.set.minI
-				 },{
-					 x: occlusion.minX + (baseCoord.x+1)*4,
-					 y: occlusion.minY + baseCoord.y*4 + portal.set.maxJ+1,
-					 z: occlusion.minZ + baseCoord.z*4 + portal.set.maxI+1
-				 },{
-					 x: occlusion.minX + (baseCoord.x+1)*4,
-					 y: occlusion.minY + baseCoord.y*4 + portal.set.minJ,
-					 z: occlusion.minZ + baseCoord.z*4 + portal.set.maxI+1
-				 },TDContext.scene,0xffff00);
-				 }
-			 for (var u = 0; u < cell.portals.plusY.result.solution.length; u++) {
-				 var portal = cell.portals.plusY.result.solution[u];
-				 var baseCoord = {
-					 x:occlusion.tiles[i].x,
-					 y:occlusion.tiles[i].y,
-					 z:occlusion.tiles[i].z
-				 }
-				 makeQuad({
-					 x: occlusion.minX + baseCoord.x*4 + portal.set.minJ,
-					 y: occlusion.minY + (baseCoord.y+1)*4,
-					 z: occlusion.minZ + baseCoord.z*4 + portal.set.minI
-				 },{
-					 x: occlusion.minX + baseCoord.x*4 + portal.set.maxJ+1,
-					 y: occlusion.minY + (baseCoord.y+1)*4,
-					 z: occlusion.minZ + baseCoord.z*4 + portal.set.minI
-				 },{
-					 x: occlusion.minX + baseCoord.x*4 + portal.set.maxJ+1,
-					 y: occlusion.minY + (baseCoord.y+1)*4,
-					 z: occlusion.minZ + baseCoord.z*4 + portal.set.maxI+1
-				 },{
-					 x: occlusion.minX + baseCoord.x*4 + portal.set.minJ,
-					 y: occlusion.minY + (baseCoord.y+1)*4,
-					 z: occlusion.minZ + baseCoord.z*4 + portal.set.maxI+1
-				 },TDContext.scene,0xffff00);
-			 }
-			 for (var u = 0; u < cell.portals.minusY.result.solution.length; u++) {
-				 var portal = cell.portals.minusY.result.solution[u];
-				 var baseCoord = {
-					 x:occlusion.tiles[i].x,
-					 y:occlusion.tiles[i].y,
-					 z:occlusion.tiles[i].z
-				 }
-				 makeQuad({
-					 x: occlusion.minX + baseCoord.x*4 + portal.set.minJ,
-					 y: occlusion.minY + baseCoord.y*4,
-					 z: occlusion.minZ + baseCoord.z*4 + portal.set.minI
-				 },{
-					 x: occlusion.minX + baseCoord.x*4 + portal.set.maxJ+1,
-					 y: occlusion.minY + baseCoord.y*4,
-					 z: occlusion.minZ + baseCoord.z*4 + portal.set.minI
-				 },{
-					 x: occlusion.minX + baseCoord.x*4 + portal.set.maxJ+1,
-					 y: occlusion.minY + baseCoord.y*4,
-					 z: occlusion.minZ + baseCoord.z*4 + portal.set.maxI+1
-				 },{
-					 x: occlusion.minX + baseCoord.x*4 + portal.set.minJ,
-					 y: occlusion.minY + baseCoord.y*4,
-					 z: occlusion.minZ + baseCoord.z*4 + portal.set.maxI+1
-				 },TDContext.scene,0xff00ff);
-			}
-			for (var u = 0; u < cell.portals.minusZ.result.solution.length; u++) {
-				 var portal = cell.portals.minusZ.result.solution[u];
-				 var baseCoord = {
-					 x:occlusion.tiles[i].x,
-					 y:occlusion.tiles[i].y,
-					 z:occlusion.tiles[i].z
-				 }
-				 makeQuad({
-					 x: occlusion.minX + baseCoord.x*4 + portal.set.minJ,
-					 y: occlusion.minY + baseCoord.y*4 + portal.set.minI,
-					 z: occlusion.minZ + baseCoord.z*4
-				 },{
-					 x: occlusion.minX + baseCoord.x*4 + portal.set.maxJ+1,
-					 y: occlusion.minY + baseCoord.y*4 + portal.set.minI,
-					 z: occlusion.minZ + baseCoord.z*4
-				 },{
-					 x: occlusion.minX + baseCoord.x*4 + portal.set.maxJ+1,
-					 y: occlusion.minY + baseCoord.y*4 + portal.set.maxI+1,
-					 z: occlusion.minZ + baseCoord.z*4
-				 },{
-					 x: occlusion.minX + baseCoord.x*4 + portal.set.minJ,
-					 y: occlusion.minY + baseCoord.y*4 + portal.set.maxI+1,
-					 z: occlusion.minZ + baseCoord.z*4
-				 },TDContext.scene,0x0000ff);
-			 }
-		// 	for(var k = 0; k<cell.voxels.minXVoxel.length;k++) {
-		// 		TDContext.scene.add(cell.voxels.minXVoxel[k].cube);
-		// 	}
-		// 	for(var k = 0; k<cell.voxels.maxXVoxel.length;k++) {
-		// 		TDContext.scene.add(cell.voxels.maxXVoxel[k].cube);
-		// 	}
-		// 	for(var k = 0; k<cell.voxels.minYVoxel.length;k++) {
-		// 		TDContext.scene.add(cell.voxels.minYVoxel[k].cube);
-		// 	}
-		// 	for(var k = 0; k<cell.voxels.maxYVoxel.length;k++) {
-		// 		TDContext.scene.add(cell.voxels.maxYVoxel[k].cube);
-		// 	}
-		// 	for(var k = 0; k<cell.voxels.minZVoxel.length;k++) {
-		// 		TDContext.scene.add(cell.voxels.minZVoxel[k].cube);
-		// 	}
-		// 	for(var k = 0; k<cell.voxels.maxZVoxel.length;k++) {
-		// 		TDContext.scene.add(cell.voxels.maxZVoxel[k].cube);
-		// 	}
-		 }
-	}
-
 	var render = function () {
 		//console.log('x:' + TDContext.camera.position.x + ',y:' + TDContext.camera.position.y);
 		TDContext.playerLight.position.set( TDContext.camera.position.x, TDContext.camera.position.y, TDContext.camera.position.z );
@@ -215,12 +90,45 @@ fileResult.onload = function (event) {
 		}
 
 		if (cameraDf) {
-
 			TDContext.camera.position.add(look.multiplyScalar(cameraDf));
 		}
 		if (cameraDside) {
 
 			TDContext.camera.position.add(right.multiplyScalar(cameraDside));
+		}
+		
+
+		//preping camera to extract frustum
+		TDContext.camera.updateMatrix();
+		TDContext.camera.updateMatrixWorld();
+		TDContext.camera.matrixWorldInverse.getInverse( TDContext.camera.matrixWorld);
+
+		var camFrustum = new THREE.Frustum();
+		camFrustum.setFromMatrix( new THREE.Matrix4().multiply( TDContext.camera.projectionMatrix, TDContext.camera.matrixWorldInverse));
+
+		var myTile = occlusion.findContainingTile(
+			TDContext.camera.position.x,
+			TDContext.camera.position.y,
+			TDContext.camera.position.z
+		);
+
+		var myCell;
+
+		if (myTile) {
+			for (var i = 0; i < myTile.cells.length; i++) {
+				var cell = myTile.cells[i];
+				if (cell.volumeMap.get(
+						TDContext.camera.position.x,
+						TDContext.camera.position.y,
+						TDContext.camera.position.z
+					)) {
+					myCell = cell;
+					break;
+				}
+			};
+		}
+
+		if (myCell) {
 		}
 
 		requestAnimationFrame( render );

@@ -142,12 +142,12 @@
 	}
 
 	function convertBoundary(set, cb) {
-		cb({
-			min: set.minI,
-			max set.minI + 1
+		return cb({
+			min: set.set.minI,
+			max: set.set.maxI + 1
 		}, {
-			min: set.minJ,
-			max set.minJ + 1
+			min: set.set.minJ,
+			max: set.set.maxJ + 1
 		});
 	}
 
@@ -165,79 +165,79 @@
 					start: {
 						x: baseCoord.x * tileSize,
 						y: baseCoord.y * tileSize + variantJ.min,
-						z: baseCoord.z * tileSize + vartiantI.min
+						z: baseCoord.z * tileSize + variantI.min
 					},
 					end: {
 						x: baseCoord.x * tileSize,
 						y: baseCoord.y * tileSize + variantJ.max + 1,
-						z: baseCoord.z * tileSize + vartiantI.max + 1,
+						z: baseCoord.z * tileSize + variantI.max + 1,
 					}
 				}
 			});
 		});
 
 		portals.plusX = boundarySets.plusX.result.solution.map(function(set) {
-			return convertBoundary(set, function(invariant, variantI, variantJ) {
+			return convertBoundary(set, function(variantI, variantJ) {
 				return {
 					start: {
 						x: (baseCoord.x + 1) * tileSize,
 						y: baseCoord.y * tileSize + variantJ.min,
-						z: baseCoord.z * tileSize + vartiantI.min
+						z: baseCoord.z * tileSize + variantI.min
 					},
 					end: {
 						x: (baseCoord.x + 1) * tileSize,
 						y: baseCoord.y * tileSize + variantJ.max + 1,
-						z: baseCoord.z * tileSize + vartiantI.max + 1,
+						z: baseCoord.z * tileSize + variantI.max + 1,
 					}
 				}
 			});
 		});
 
 		portals.minusY = boundarySets.minusY.result.solution.map(function(set) {
-			return convertBoundary(set, function(invariant, variantI, variantJ) {
+			return convertBoundary(set, function(variantI, variantJ) {
 				return {
 					start: {
 						x: baseCoord.x * tileSize + variantJ.min,
 						y: baseCoord.y * tileSize,
-						z: baseCoord.z * tileSize + vartiantI.min
+						z: baseCoord.z * tileSize + variantI.min
 					},
 					end: {
 						x: baseCoord.x * tileSize + variantJ.max + 1,
 						y: baseCoord.y * tileSize,
-						z: baseCoord.z * tileSize + vartiantI.max + 1,
+						z: baseCoord.z * tileSize + variantI.max + 1,
 					}
 				}
 			});
 		});
 
 		portals.plusY = boundarySets.plusY.result.solution.map(function(set) {
-			return convertBoundary(set, function(invariant, variantI, variantJ) {
+			return convertBoundary(set, function(variantI, variantJ) {
 				return {
 					start: {
 						x: baseCoord.x * tileSize + variantJ.min,
 						y: (baseCoord.y + 1) * tileSize,
-						z: baseCoord.z * tileSize + vartiantI.min
+						z: baseCoord.z * tileSize + variantI.min
 					},
 					end: {
 						x: baseCoord.x * tileSize + variantJ.max + 1,
 						y: (baseCoord.y + 1) * tileSize,
-						z: baseCoord.z * tileSize + vartiantI.max + 1,
+						z: baseCoord.z * tileSize + variantI.max + 1,
 					}
 				}
 			});
 		});
 
 		portals.minusZ = boundarySets.minusZ.result.solution.map(function(set) {
-			return convertBoundary(set, function(invariant, variantI, variantJ) {
+			return convertBoundary(set, function(variantI, variantJ) {
 				return {
 					start: {
 						x: baseCoord.x * tileSize + variantJ.min,
-						y: baseCoord.y * tileSize + vartiantI.min,
+						y: baseCoord.y * tileSize + variantI.min,
 						z: baseCoord.z * tileSize
 					},
 					end: {
 						x: baseCoord.x * tileSize + variantJ.max + 1,
-						y: baseCoord.y * tileSize + vartiantI.max + 1,
+						y: baseCoord.y * tileSize + variantI.max + 1,
 						z: baseCoord.z * tileSize
 					}
 				}
@@ -245,16 +245,16 @@
 		});
 
 		portals.plusY = boundarySets.plusY.result.solution.map(function(set) {
-			return convertBoundary(set, function(invariant, variantI, variantJ) {
+			return convertBoundary(set, function(variantI, variantJ) {
 				return {
 					start: {
 						x: baseCoord.x * tileSize + variantJ.min,
-						y: baseCoord.y * tileSize + vartiantI.min,
+						y: baseCoord.y * tileSize + variantI.min,
 						z: (baseCoord.z + 1) * tileSize
 					},
 					end: {
 						x: baseCoord.x * tileSize + variantJ.max + 1,
-						y: baseCoord.y * tileSize + vartiantI.max + 1,
+						y: baseCoord.y * tileSize + variantI.max + 1,
 						z: (baseCoord.z + 1) * tileSize
 					}
 				}
